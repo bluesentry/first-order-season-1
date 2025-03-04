@@ -14,7 +14,7 @@ spec:
         app: mario
     spec:
       containers:
-      - name: mario-container
+      - name: "{{ .Values.game.image.containerName }}"
         image: "{{ .Values.game.image.repository }}"
         ports:
-        - containerPort: 80
+        - containerPort: "{{ .Values.game.ports.containerPort }}"
