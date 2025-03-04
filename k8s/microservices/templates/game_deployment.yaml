@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: mario-deployment
+  name: {{ .Values.game.deployment.name }}
   namespace: {{ .Values.game.name }}
 spec:
   replicas: 1  
   selector:
     matchLabels:
-      app: mario
+      app: {{ .Values.game.app.selectorLabel }} 
   template:
     metadata:
       labels:
-        app: mario
+        app: {{ .Values.game.app.selectorLabel }} 
     spec:
       containers:
-      - name: "{{ .Values.game.image.containerName }}"
-        image: "{{ .Values.game.image.repository }}"
+      - name: {{ .Values.game.image.containerName }}
+        image: {{ .Values.game.image.repository }}
         ports:
-        - containerPort: "{{ .Values.game.ports.containerPort }}"
+        - containerPort: {{ .Values.game.image.ports.containerPort }}
