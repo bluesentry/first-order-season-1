@@ -79,3 +79,5 @@ metro.config.js
 **/Pods/*
 
 **/.terraform.lock.hcl
+
+README.txt
