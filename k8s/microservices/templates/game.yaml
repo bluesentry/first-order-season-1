@@ -3,23 +3,3 @@ kind: Namespace
 metadata:
   name: {{ .Values.game.name }}
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: mario-deployment
-  namespace: {{ .Values.game.name }}
-spec:
-  replicas: 1  
-  selector:
-    matchLabels:
-      app: mario
-  template:
-    metadata:
-      labels:
-        app: mario
-    spec:
-      containers:
-      - name: mario-container
-        image: nirmalnaveen/supermario
-        ports:
-        - containerPort: 80
