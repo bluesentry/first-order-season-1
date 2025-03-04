@@ -19,6 +19,7 @@ game:
     pullPolicy: Always
     ports:
       containerPort: 80
+      nodePort: 80
 
   resources:
     requests:
