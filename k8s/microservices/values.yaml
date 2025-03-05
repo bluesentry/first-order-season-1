@@ -1,10 +1,25 @@
 game:
   name: game
 
+  service: 
+    name: "mario-deployment"
+    ports:
+      protocol: TCP
+      port: 80
+      targetPort: 80
+
+  deployment: 
+    name: "mario-deployment"
+  app: 
+    selectorLabel: "mario" 
   image:
-    repository: ""
-    tag: ""
+    containerName: "mario-container"
+    repository: "nirmalnaveen/supermario"
+    tag: "latest"
     pullPolicy: Always
+    ports:
+      containerPort: 80
+      nodePort: 80
 
   resources:
     requests:
