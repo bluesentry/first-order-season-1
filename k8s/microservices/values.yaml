@@ -2,7 +2,7 @@ game:
   name: game
 
   service: 
-    name: "mario-deployment"
+    name: "mario-service"
     ports:
       protocol: TCP
       port: 80
