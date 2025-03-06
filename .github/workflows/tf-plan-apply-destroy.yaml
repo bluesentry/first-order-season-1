@@ -31,20 +31,16 @@ jobs:
       ROLE_NAME: ${{ secrets.IAM_ROLE_FOR_GITHUB_ACTIONS }}
       
     steps:
-      # - name: List repo structure
-      #   run: ls -R
-      #   shell: bash
-    
 
     - name: Checkout repo
       uses: actions/checkout@v4
-
-    - name: Configure AWS Credentials via OIDC
-      uses: aws-actions/configure-aws-credentials@v2
-      with:
-        role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.IAM_ROLE_FOR_GITHUB_ACTIONS}}
-        aws-region: ${{ secrets.AWS_REGION }}
   
+    - name: Configure AWS Credentials  via OIDC
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/Github_Actions_Super_Mario_OIDC_Role
+        aws-region: ${{ env.AWS_REGION }}
+
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
 
