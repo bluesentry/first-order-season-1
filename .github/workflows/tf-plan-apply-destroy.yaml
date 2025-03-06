@@ -39,7 +39,7 @@ jobs:
       run: |
         echo "AWS Region: ${{ env.AWS_REGION }}"
         echo "AWS Account ID: ${{ env.AWS_ACCOUNT_ID }}"
-        echo "IAM Role: ${{ env.IAM_ROLE_FOR_GITHUB_ACTIONS }}"
+        echo "IAM Role: ${{ env.ROLE_NAME }}"
       shell: bash
     
   
