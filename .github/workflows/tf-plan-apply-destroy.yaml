@@ -35,12 +35,6 @@ jobs:
       #   run: ls -R
       #   shell: bash
     
-    - name: Print AWS Values
-      run: |
-        echo "AWS Region: ${{ env.AWS_REGION }}"
-        echo "AWS Account ID: ${{ env.AWS_ACCOUNT_ID }}"
-        echo "IAM Role: ${{ env.ROLE_NAME }}"
-    
 
     - name: Checkout repo
       uses: actions/checkout@v4
@@ -48,8 +42,8 @@ jobs:
     - name: Configure AWS Credentials via OIDC
       uses: aws-actions/configure-aws-credentials@v2
       with:
-        role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.ROLE_NAME}}
-        aws-region: ${{ env.AWS_REGION }}
+        role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.ROLE_NAME}}
+        aws-region: ${{ secrets.AWS_REGION }}
   
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
