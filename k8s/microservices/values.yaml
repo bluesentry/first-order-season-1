@@ -21,6 +21,9 @@ game:
       containerPort: 80
       nodePort: 80
 
+  ingress:
+    host: game-ai-ml-competition-2025-0.brewsentry.com
+    
   resources:
     requests:
       cpu: "500m"
