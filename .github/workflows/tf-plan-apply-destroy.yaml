@@ -31,17 +31,18 @@ jobs:
       ROLE_NAME: ${{ secrets.IAM_ROLE_FOR_GITHUB_ACTIONS }}
       
     steps:
-    # - name: List repo structure
-    #   run: ls -R
-    #   shell: bash
+      # - name: List repo structure
+      #   run: ls -R
+      #   shell: bash
     
-    # - name: Debug Secrets and Variables
-    #   run: |
-    #     echo "AWS_REGION: ${{ env.AWS_REGION }}"
-    #     echo "AWS_ACCOUNT_ID: ${{ env.AWS_ACCOUNT_ID }}"
-    #     echo "IAM_ROLE_FOR_GITHUB_ACTIONS: ${{ secrets.IAM_ROLE_FOR_GITHUB_ACTIONS }}"
-    #     echo "ROLE_NAME (from env): $ROLE_NAME"
-    #   shell: bash
+    - name: Print AWS Values
+      run: |
+        echo "AWS Region: ${{ env.AWS_REGION }}"
+        echo "AWS Account ID: ${{ env.AWS_ACCOUNT_ID }}"
+        echo "IAM Role: ${{ env.IAM_ROLE_FOR_GITHUB_ACTIONS }}"
+      shell: bash
+    
+  
 
     - name: Checkout repo
       uses: actions/checkout@v4
