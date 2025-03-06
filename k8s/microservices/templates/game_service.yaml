@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: {{ .Values.game.service.name }}
 spec:
-  type: ClusterIP
+  # type: ClusterIP
   selector:
     app: {{ .Values.game.app.selectorLabel }} 
   ports:
