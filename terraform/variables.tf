@@ -60,3 +60,9 @@ variable "vpc_redundancy" {
 
   default = false
 }
+
+variable "github_actions_oidc_role" {
+  type        = string
+  description = "Name of the keypair to ssh into the instance"
+  default     = null
+}
