@@ -77,7 +77,8 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "route53:GetHostedZone",
           "route53:CreateHostedZone",
           "route53:DeleteHostedZone",
-          "route53:ListHostedZones"
+          "route53:ListHostedZones",
+          "route53:ListTagsForResource"
         ],
         "Resource" : "*"
       },
@@ -115,8 +116,6 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "arn:aws:s3:::bsc.sandbox.terraform.state/*"
         ]
       },
-
-
       {
         "Sid" : "ECRPermissions",
         "Effect" : "Allow",
@@ -165,7 +164,10 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "iam:AttachRolePolicy",
           "iam:DetachRolePolicy",
           "iam:ListAttachedRolePolicies",
-          "iam:UpdateAssumeRolePolicy"
+          "iam:UpdateAssumeRolePolicy",
+          "iam:ListPolicies",
+          "iam:GetPolicy",
+          "iam:ListOpenIDConnectProviders"
         ],
         "Resource" : "*"
       },
@@ -179,6 +181,14 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "ssm:PutParameter",
           "ssm:DeleteParameter",
           "ssm:DescribeParameters"
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "ACMPermissions",
+        "Effect" : "Allow",
+        "Action" : [
+          "acm:DescribeCertificate"
         ],
         "Resource" : "*"
       }
