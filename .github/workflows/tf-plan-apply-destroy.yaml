@@ -33,7 +33,7 @@ jobs:
 
     env:
       AWS_REGION: us-east-1
-      AWS_ACCOUNT_ID: 704855531002 # ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       ROLE_NAME: Github_Actions_Super_Mario_OIDC_Role
       
     steps:
