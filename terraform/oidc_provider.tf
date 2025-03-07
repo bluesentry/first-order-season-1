@@ -174,7 +174,8 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "iam:ListRolePolicies", 
           "iam:GetPolicy", 
           "iam:GetPolicyVersion",
-          "iam:GetOpenIDConnectProvider"
+          "iam:GetOpenIDConnectProvider", 
+          "iam:GetRolePolicy"
         ],
         "Resource" : "*"
       },
@@ -207,7 +208,16 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "ec2:DescribeVpcs", 
           "ec2:DescribeDhcpOptions",
           "ec2:DescribeAvailabilityZones",
-          "ec2:DescribeVpcAttribute"
+          "ec2:DescribeVpcAttribute",
+          "ec2:DescribeSecurityGroups", 
+          "ec2:DescribeRouteTables", 
+          "ec2:DescribeSubnets", 
+          "ec2:DescribeInternetGateways",
+          "ec2:DescribeNetworkAcls", 
+          "ec2:DescribeFlowLogs",
+          "ec2:DescribeSecurityGroupRules",
+          "ec2:DescribeAddresses",
+          "ec2:DescribeVpcEndpointServices"
         ],
         "Resource" : "*"
       },
@@ -224,10 +234,22 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "KmsPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "kms:DescribeKey" 
+          "kms:DescribeKey", 
+          "kms:GetKeyPolicy", 
+          "kms:GetKeyRotationStatus"
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "RDSPermissions",
+        "Effect" : "Allow",
+        "Action" : [
+          "rds:DescribeDBSubnetGroups"
         ],
         "Resource" : "*"
       }
+
+
 
 
 
