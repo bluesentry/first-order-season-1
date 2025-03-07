@@ -71,9 +71,10 @@ jobs:
     #     tf_actions_subcommand: 'init'
     #     tf_actions_working_dir: '.'
     #     tf_actions_comment: true
+    # -reconfigure
 
     - name: Terraform Init
-      run: terraform init -reconfigure
+      run: terraform init 
       working-directory: terraform
 
     - name: Terraform Plan

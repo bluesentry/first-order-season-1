@@ -49,8 +49,8 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "ecr:PutImage"
         ],
         "Resource" : "*"
-      }, 
-       {
+      },
+      {
         "Sid" : "EKSPermissions",
         "Effect" : "Allow",
         "Action" : [
@@ -81,7 +81,7 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         ],
         "Resource" : "*"
       },
-       {
+      {
         "Sid" : "LoadBalancerPermissions",
         "Effect" : "Allow",
         "Action" : [
@@ -108,13 +108,82 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "s3:ListBucket",
           "s3:GetObject",
           "s3:PutObject",
-          "s3:HeadObject"  
+          "s3:HeadObject"
         ],
         "Resource" : [
           "arn:aws:s3:::bsc.sandbox.terraform.state",
           "arn:aws:s3:::bsc.sandbox.terraform.state/*"
         ]
+      },
+
+
+      {
+        "Sid" : "ECRPermissions",
+        "Effect" : "Allow",
+        "Action" : [
+          "ecr:GetAuthorizationToken",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:PutImage",
+          "ecr:CreateRepository",
+          "ecr:DescribeRepositories",
+          "ecr:ListImages",
+          "ecr:DeleteRepository",
+          "ecr:DeleteRepositoryPolicy",
+          "ecr:SetRepositoryPolicy",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload"
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "DynamoDBPermissions",
+        "Effect" : "Allow",
+        "Action" : [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:Scan",
+          "dynamodb:Query",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:BatchWriteItem",
+          "dynamodb:DescribeTable",
+          "dynamodb:ListTables"
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "IAMPermissions",
+        "Effect" : "Allow",
+        "Action" : [
+          "iam:PassRole",
+          "iam:GetRole",
+          "iam:CreateRole",
+          "iam:DeleteRole",
+          "iam:AttachRolePolicy",
+          "iam:DetachRolePolicy",
+          "iam:ListAttachedRolePolicies",
+          "iam:UpdateAssumeRolePolicy"
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "SSMPermissions",
+        "Effect" : "Allow",
+        "Action" : [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParameterHistory",
+          "ssm:PutParameter",
+          "ssm:DeleteParameter",
+          "ssm:DescribeParameters"
+        ],
+        "Resource" : "*"
       }
+
+
     ]
   })
 }
