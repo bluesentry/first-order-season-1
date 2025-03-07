@@ -69,7 +69,7 @@ jobs:
       working-directory: terraform
 
     - name: Terraform Plan
-      run: terraform plan
+      run: terraform plan -out=plan.tfplan > terraform.log 2>&1
       working-directory: terraform
 
     - name: Terraform Apply
