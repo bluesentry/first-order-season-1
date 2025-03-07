@@ -33,7 +33,7 @@ jobs:
 
     env:
       AWS_REGION: us-east-1
-      AWS_ACCOUNT_ID: 704855531002 # ${{ secrets.AWS_ACCOUNT_ID }}
+      #AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
       ROLE_NAME: Github_Actions_Super_Mario_OIDC_Role
       
     steps:
@@ -44,7 +44,7 @@ jobs:
     - name: Configure AWS Credentials  via OIDC
       uses: aws-actions/configure-aws-credentials@v2
       with:
-        role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.ROLE_NAME }}
+        role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ env.ROLE_NAME }}
         aws-region: ${{ env.AWS_REGION }}
 
     - name: Setup Terraform
