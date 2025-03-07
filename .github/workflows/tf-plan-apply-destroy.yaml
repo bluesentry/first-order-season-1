@@ -64,15 +64,6 @@ jobs:
           --public-access-cidrs "${GITHUB_IPS}/32" \
           --approve || true
 
-    # - name: Terraform Init
-    #   uses: hashicorp/terraform-github-actions@master
-    #   with:
-    #     tf_actions_version: 0.14.3
-    #     tf_actions_subcommand: 'init'
-    #     tf_actions_working_dir: '.'
-    #     tf_actions_comment: true
-    # -reconfigure
-
     - name: Terraform Init
       run: terraform init 
       working-directory: terraform
@@ -80,7 +71,6 @@ jobs:
     - name: Terraform Plan
       run: terraform plan
       working-directory: terraform
-
 
     - name: Terraform Apply
       if: ${{ github.event.inputs.terraform_action == 'apply' }}
@@ -91,3 +81,10 @@ jobs:
       if: ${{ github.event.inputs.terraform_action == 'destroy' }}
       run: terraform destroy -auto-approve
       working-directory: terraform/infrastructure
+
+    # Upload logs to S3 after each Terraform action
+    - name: Upload Terraform logs to S3
+      if: ${{ github.event.inputs.terraform_action == 'plan' || github.event.inputs.terraform_action == 'apply' || github.event.inputs.terraform_action == 'destroy' }}
+      run: |
+        # Assuming the Terraform logs are saved to terraform.log
+        aws s3 cp terraform.log s3://noor-meeting-videos/logs/terraform-${{ github.event.inputs.terraform_action }}.log
