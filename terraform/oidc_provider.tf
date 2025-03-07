@@ -41,14 +41,7 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "ECRPushPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:InitiateLayerUpload",
-          "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload",
-          "ecr:PutImage", 
-          "ecr:GetRepositoryPolicy",
-          "ecr:GetLifecyclePolicy"
+          "ecr:*"
         ],
         "Resource" : "*"
       },
@@ -56,17 +49,7 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "EKSPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "eks:CreateCluster",
-          "eks:DescribeCluster",
-          "eks:UpdateClusterConfig",
-          "eks:UpdateClusterVersion",
-          "eks:DeleteCluster",
-          "eks:ListClusters",
-          "eks:DescribeNodegroup",
-          "eks:CreateNodegroup",
-          "eks:UpdateNodegroupConfig",
-          "eks:UpdateNodegroupVersion",
-          "eks:DeleteNodegroup"
+          "eks:*"
         ],
         "Resource" : "*"
       },
@@ -74,13 +57,7 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "Route53Permissions",
         "Effect" : "Allow",
         "Action" : [
-          "route53:ChangeResourceRecordSets",
-          "route53:ListResourceRecordSets",
-          "route53:GetHostedZone",
-          "route53:CreateHostedZone",
-          "route53:DeleteHostedZone",
-          "route53:ListHostedZones",
-          "route53:ListTagsForResource"
+          "route53:*"
         ],
         "Resource" : "*"
       },
@@ -88,19 +65,7 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "LoadBalancerPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "elasticloadbalancing:CreateLoadBalancer",
-          "elasticloadbalancing:DescribeLoadBalancers",
-          "elasticloadbalancing:DeleteLoadBalancer",
-          "elasticloadbalancing:ModifyLoadBalancerAttributes",
-          "elasticloadbalancing:CreateTargetGroup",
-          "elasticloadbalancing:DescribeTargetGroups",
-          "elasticloadbalancing:DeleteTargetGroup",
-          "elasticloadbalancing:RegisterTargets",
-          "elasticloadbalancing:DeregisterTargets",
-          "elasticloadbalancing:DescribeListeners",
-          "elasticloadbalancing:CreateListener",
-          "elasticloadbalancing:DeleteListener",
-          "elasticloadbalancing:ModifyListener"
+          "elasticloadbalancing:*"
         ],
         "Resource" : "*"
       },
@@ -122,21 +87,7 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "ECRPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-          "ecr:PutImage",
-          "ecr:CreateRepository",
-          "ecr:DescribeRepositories",
-          "ecr:ListImages",
-          "ecr:DeleteRepository",
-          "ecr:DeleteRepositoryPolicy",
-          "ecr:SetRepositoryPolicy",
-          "ecr:InitiateLayerUpload",
-          "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload",
-          "ecr:ListTagsForResource"
+          "ecr:*"
         ],
         "Resource" : "*"
       },
@@ -144,15 +95,7 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "DynamoDBPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "dynamodb:PutItem",
-          "dynamodb:GetItem",
-          "dynamodb:Scan",
-          "dynamodb:Query",
-          "dynamodb:UpdateItem",
-          "dynamodb:DeleteItem",
-          "dynamodb:BatchWriteItem",
-          "dynamodb:DescribeTable",
-          "dynamodb:ListTables"
+          "dynamodb:*"
         ],
         "Resource" : "*"
       },
@@ -160,22 +103,7 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "IAMPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "iam:PassRole",
-          "iam:GetRole",
-          "iam:CreateRole",
-          "iam:DeleteRole",
-          "iam:AttachRolePolicy",
-          "iam:DetachRolePolicy",
-          "iam:ListAttachedRolePolicies",
-          "iam:UpdateAssumeRolePolicy",
-          "iam:ListPolicies",
-          "iam:GetPolicy",
-          "iam:ListOpenIDConnectProviders",
-          "iam:ListRolePolicies", 
-          "iam:GetPolicy", 
-          "iam:GetPolicyVersion",
-          "iam:GetOpenIDConnectProvider", 
-          "iam:GetRolePolicy"
+          "iam:*"
         ],
         "Resource" : "*"
       },
@@ -183,12 +111,7 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "SSMPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "ssm:GetParameter",
-          "ssm:GetParameters",
-          "ssm:GetParameterHistory",
-          "ssm:PutParameter",
-          "ssm:DeleteParameter",
-          "ssm:DescribeParameters"
+          "ssm:*"
         ],
         "Resource" : "*"
       },
@@ -196,8 +119,7 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "ACMPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "acm:DescribeCertificate",
-          "acm:ListTagsForCertificate"
+          "acm:*"
         ],
         "Resource" : "*"
       },
@@ -205,21 +127,7 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "EC2Permissions",
         "Effect" : "Allow",
         "Action" : [
-          "ec2:DescribeVpcs", 
-          "ec2:DescribeDhcpOptions",
-          "ec2:DescribeAvailabilityZones",
-          "ec2:DescribeVpcAttribute",
-          "ec2:DescribeSecurityGroups", 
-          "ec2:DescribeRouteTables", 
-          "ec2:DescribeSubnets", 
-          "ec2:DescribeInternetGateways",
-          "ec2:DescribeNetworkAcls", 
-          "ec2:DescribeFlowLogs",
-          "ec2:DescribeSecurityGroupRules",
-          "ec2:DescribeAddresses",
-          "ec2:DescribeVpcEndpoints",
-          "ec2:DescribeVpcEndpointServices",
-          "ec2:DescribeAddressesAttribute"
+          "ec2:*"
         ],
         "Resource" : "*"
       },
@@ -227,8 +135,7 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "LogPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "logs:DescribeLogGroups",
-          "logs:ListTagsForResource"
+          "logs:*"
         ],
         "Resource" : "*"
       },
@@ -236,10 +143,7 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "KmsPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "kms:DescribeKey", 
-          "kms:GetKeyPolicy", 
-          "kms:GetKeyRotationStatus",
-          "kms:ListResourceTags"
+          "kms:*"
         ],
         "Resource" : "*"
       },
@@ -247,16 +151,237 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "RDSPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "rds:DescribeDBSubnetGroups",
-          "rds:ListTagsForResource"
+          "rds:*"
         ],
         "Resource" : "*"
       }
 
 
-
-
-
     ]
   })
+  # policy = jsonencode({
+  #   "Version" : "2012-10-17",
+  #   "Statement" : [
+  #     {
+  #       "Sid" : "ECRPushPermissions",
+  #       "Effect" : "Allow",
+  #       "Action" : [
+  #         "ecr:GetAuthorizationToken",
+  #         "ecr:BatchCheckLayerAvailability",
+  #         "ecr:InitiateLayerUpload",
+  #         "ecr:UploadLayerPart",
+  #         "ecr:CompleteLayerUpload",
+  #         "ecr:PutImage", 
+  #         "ecr:GetRepositoryPolicy",
+  #         "ecr:GetLifecyclePolicy"
+  #       ],
+  #       "Resource" : "*"
+  #     },
+  #     {
+  #       "Sid" : "EKSPermissions",
+  #       "Effect" : "Allow",
+  #       "Action" : [
+  #         "eks:CreateCluster",
+  #         "eks:DescribeCluster",
+  #         "eks:UpdateClusterConfig",
+  #         "eks:UpdateClusterVersion",
+  #         "eks:DeleteCluster",
+  #         "eks:ListClusters",
+  #         "eks:DescribeNodegroup",
+  #         "eks:CreateNodegroup",
+  #         "eks:UpdateNodegroupConfig",
+  #         "eks:UpdateNodegroupVersion",
+  #         "eks:DeleteNodegroup"
+  #       ],
+  #       "Resource" : "*"
+  #     },
+  #     {
+  #       "Sid" : "Route53Permissions",
+  #       "Effect" : "Allow",
+  #       "Action" : [
+  #         "route53:ChangeResourceRecordSets",
+  #         "route53:ListResourceRecordSets",
+  #         "route53:GetHostedZone",
+  #         "route53:CreateHostedZone",
+  #         "route53:DeleteHostedZone",
+  #         "route53:ListHostedZones",
+  #         "route53:ListTagsForResource"
+  #       ],
+  #       "Resource" : "*"
+  #     },
+  #     {
+  #       "Sid" : "LoadBalancerPermissions",
+  #       "Effect" : "Allow",
+  #       "Action" : [
+  #         "elasticloadbalancing:CreateLoadBalancer",
+  #         "elasticloadbalancing:DescribeLoadBalancers",
+  #         "elasticloadbalancing:DeleteLoadBalancer",
+  #         "elasticloadbalancing:ModifyLoadBalancerAttributes",
+  #         "elasticloadbalancing:CreateTargetGroup",
+  #         "elasticloadbalancing:DescribeTargetGroups",
+  #         "elasticloadbalancing:DeleteTargetGroup",
+  #         "elasticloadbalancing:RegisterTargets",
+  #         "elasticloadbalancing:DeregisterTargets",
+  #         "elasticloadbalancing:DescribeListeners",
+  #         "elasticloadbalancing:CreateListener",
+  #         "elasticloadbalancing:DeleteListener",
+  #         "elasticloadbalancing:ModifyListener"
+  #       ],
+  #       "Resource" : "*"
+  #     },
+  #     {
+  #       "Sid" : "S3Permissions",
+  #       "Effect" : "Allow",
+  #       "Action" : [
+  #         "s3:ListBucket",
+  #         "s3:GetObject",
+  #         "s3:PutObject",
+  #         "s3:HeadObject"
+  #       ],
+  #       "Resource" : [
+  #         "arn:aws:s3:::bsc.sandbox.terraform.state",
+  #         "arn:aws:s3:::bsc.sandbox.terraform.state/*"
+  #       ]
+  #     },
+  #     {
+  #       "Sid" : "ECRPermissions",
+  #       "Effect" : "Allow",
+  #       "Action" : [
+  #         "ecr:GetAuthorizationToken",
+  #         "ecr:BatchCheckLayerAvailability",
+  #         "ecr:GetDownloadUrlForLayer",
+  #         "ecr:BatchGetImage",
+  #         "ecr:PutImage",
+  #         "ecr:CreateRepository",
+  #         "ecr:DescribeRepositories",
+  #         "ecr:ListImages",
+  #         "ecr:DeleteRepository",
+  #         "ecr:DeleteRepositoryPolicy",
+  #         "ecr:SetRepositoryPolicy",
+  #         "ecr:InitiateLayerUpload",
+  #         "ecr:UploadLayerPart",
+  #         "ecr:CompleteLayerUpload",
+  #         "ecr:ListTagsForResource"
+  #       ],
+  #       "Resource" : "*"
+  #     },
+  #     {
+  #       "Sid" : "DynamoDBPermissions",
+  #       "Effect" : "Allow",
+  #       "Action" : [
+  #         "dynamodb:PutItem",
+  #         "dynamodb:GetItem",
+  #         "dynamodb:Scan",
+  #         "dynamodb:Query",
+  #         "dynamodb:UpdateItem",
+  #         "dynamodb:DeleteItem",
+  #         "dynamodb:BatchWriteItem",
+  #         "dynamodb:DescribeTable",
+  #         "dynamodb:ListTables"
+  #       ],
+  #       "Resource" : "*"
+  #     },
+  #     {
+  #       "Sid" : "IAMPermissions",
+  #       "Effect" : "Allow",
+  #       "Action" : [
+  #         "iam:PassRole",
+  #         "iam:GetRole",
+  #         "iam:CreateRole",
+  #         "iam:DeleteRole",
+  #         "iam:AttachRolePolicy",
+  #         "iam:DetachRolePolicy",
+  #         "iam:ListAttachedRolePolicies",
+  #         "iam:UpdateAssumeRolePolicy",
+  #         "iam:ListPolicies",
+  #         "iam:GetPolicy",
+  #         "iam:ListOpenIDConnectProviders",
+  #         "iam:ListRolePolicies", 
+  #         "iam:GetPolicy", 
+  #         "iam:GetPolicyVersion",
+  #         "iam:GetOpenIDConnectProvider", 
+  #         "iam:GetRolePolicy"
+  #       ],
+  #       "Resource" : "*"
+  #     },
+  #     {
+  #       "Sid" : "SSMPermissions",
+  #       "Effect" : "Allow",
+  #       "Action" : [
+  #         "ssm:GetParameter",
+  #         "ssm:GetParameters",
+  #         "ssm:GetParameterHistory",
+  #         "ssm:PutParameter",
+  #         "ssm:DeleteParameter",
+  #         "ssm:DescribeParameters"
+  #       ],
+  #       "Resource" : "*"
+  #     },
+  #     {
+  #       "Sid" : "ACMPermissions",
+  #       "Effect" : "Allow",
+  #       "Action" : [
+  #         "acm:DescribeCertificate",
+  #         "acm:ListTagsForCertificate"
+  #       ],
+  #       "Resource" : "*"
+  #     },
+  #     {
+  #       "Sid" : "EC2Permissions",
+  #       "Effect" : "Allow",
+  #       "Action" : [
+  #         "ec2:DescribeVpcs", 
+  #         "ec2:DescribeDhcpOptions",
+  #         "ec2:DescribeAvailabilityZones",
+  #         "ec2:DescribeVpcAttribute",
+  #         "ec2:DescribeSecurityGroups", 
+  #         "ec2:DescribeRouteTables", 
+  #         "ec2:DescribeSubnets", 
+  #         "ec2:DescribeInternetGateways",
+  #         "ec2:DescribeNetworkAcls", 
+  #         "ec2:DescribeFlowLogs",
+  #         "ec2:DescribeSecurityGroupRules",
+  #         "ec2:DescribeAddresses",
+  #         "ec2:DescribeVpcEndpoints",
+  #         "ec2:DescribeVpcEndpointServices",
+  #         "ec2:DescribeAddressesAttribute"
+  #       ],
+  #       "Resource" : "*"
+  #     },
+  #     {
+  #       "Sid" : "LogPermissions",
+  #       "Effect" : "Allow",
+  #       "Action" : [
+  #         "logs:DescribeLogGroups",
+  #         "logs:ListTagsForResource"
+  #       ],
+  #       "Resource" : "*"
+  #     },
+  #     {
+  #       "Sid" : "KmsPermissions",
+  #       "Effect" : "Allow",
+  #       "Action" : [
+  #         "kms:DescribeKey", 
+  #         "kms:GetKeyPolicy", 
+  #         "kms:GetKeyRotationStatus",
+  #         "kms:ListResourceTags"
+  #       ],
+  #       "Resource" : "*"
+  #     },
+  #     {
+  #       "Sid" : "RDSPermissions",
+  #       "Effect" : "Allow",
+  #       "Action" : [
+  #         "rds:DescribeDBSubnetGroups",
+  #         "rds:ListTagsForResource"
+  #       ],
+  #       "Resource" : "*"
+  #     }
+
+
+
+
+
+  #   ]
+  # })
 }
