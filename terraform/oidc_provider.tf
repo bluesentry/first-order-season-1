@@ -217,7 +217,9 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "ec2:DescribeFlowLogs",
           "ec2:DescribeSecurityGroupRules",
           "ec2:DescribeAddresses",
-          "ec2:DescribeVpcEndpointServices"
+          "ec2:DescribeVpcEndpoints",
+          "ec2:DescribeVpcEndpointServices",
+          "ec2:DescribeAddressesAttribute"
         ],
         "Resource" : "*"
       },
@@ -236,7 +238,8 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Action" : [
           "kms:DescribeKey", 
           "kms:GetKeyPolicy", 
-          "kms:GetKeyRotationStatus"
+          "kms:GetKeyRotationStatus",
+          "kms:ListResourceTags"
         ],
         "Resource" : "*"
       },
@@ -244,7 +247,8 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "RDSPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "rds:DescribeDBSubnetGroups"
+          "rds:DescribeDBSubnetGroups",
+          "rds:ListTagsForResource"
         ],
         "Resource" : "*"
       }
