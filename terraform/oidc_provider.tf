@@ -46,7 +46,9 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "ecr:InitiateLayerUpload",
           "ecr:UploadLayerPart",
           "ecr:CompleteLayerUpload",
-          "ecr:PutImage"
+          "ecr:PutImage", 
+          "ecr:GetRepositoryPolicy",
+          "ecr:GetLifecyclePolicy"
         ],
         "Resource" : "*"
       },
@@ -170,7 +172,9 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "iam:GetPolicy",
           "iam:ListOpenIDConnectProviders",
           "iam:ListRolePolicies", 
-          "iam:GetPolicy"
+          "iam:GetPolicy", 
+          "iam:GetPolicyVersion",
+          "iam:GetOpenIDConnectProvider"
         ],
         "Resource" : "*"
       },
@@ -191,7 +195,8 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "ACMPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "acm:DescribeCertificate"
+          "acm:DescribeCertificate",
+          "acm:ListTagsForCertificate"
         ],
         "Resource" : "*"
       },
@@ -201,7 +206,8 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Action" : [
           "ec2:DescribeVpcs", 
           "ec2:DescribeDhcpOptions",
-          "ec2:DescribeAvailabilityZones"
+          "ec2:DescribeAvailabilityZones",
+          "ec2:DescribeVpcAttribute"
         ],
         "Resource" : "*"
       },
@@ -209,11 +215,19 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "LogPermissions",
         "Effect" : "Allow",
         "Action" : [
-          "logs:DescribeLogGroups" 
+          "logs:DescribeLogGroups",
+          "logs:ListTagsForResource"
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "KmsPermissions",
+        "Effect" : "Allow",
+        "Action" : [
+          "kms:DescribeKey" 
         ],
         "Resource" : "*"
       }
-
 
 
 
