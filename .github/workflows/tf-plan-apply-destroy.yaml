@@ -53,38 +53,55 @@ jobs:
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
 
+
+    - name: Allow GitHub Actions in EKS Public Access CIDRs
+      run: |
+        GITHUB_IPS=$(curl -s https://api.ipify.org )
+        eksctl utils update-cluster-vpc-config \
+          --cluster smarthire \
+          --region us-east-1 \
+          --public-access-cidrs "${GITHUB_IPS}/32" \
+          --approve || true
+
     - name: Terraform Init
-      uses: hashicorp/terraform-github-actions@master
-      with:
-        tf_actions_version: 0.14.3
-        tf_actions_subcommand: 'init'
-        tf_actions_working_dir: '.'
-        tf_actions_comment: true
+      run: terraform init
+      working-directory: terraform/infrastructure
 
-    - name: Terraform plan
-      uses: hashicorp/terraform-github-actions@master
-      with:
-        tf_actions_version: 0.14.3
-        tf_actions_subcommand: 'plan'
-        tf_actions_working_dir: '.'
-        tf_actions_comment: true
+    - name: Terraform Plan
+      run: terraform plan
+      working-directory: terraform/infrastructure
+    # - name: Terraform Init
+    #   uses: hashicorp/terraform-github-actions@master
+    #   with:
+    #     tf_actions_version: 0.14.3
+    #     tf_actions_subcommand: 'init'
+    #     tf_actions_working_dir: '.'
+    #     tf_actions_comment: true
 
-    - name: Terraform apply
-      if: ${{ github.event.inputs.terraform_action == 'apply' }}
-      uses: hashicorp/terraform-github-actions@master
-      with:
-        tf_actions_version: 0.14.3
-        tf_actions_subcommand: ${{ github.event.inputs.terraform_action }}
-        tf_actions_working_dir: '.'
-        tf_actions_comment: true
-        args: '-auto-approve'
+    # - name: Terraform plan
+    #   uses: hashicorp/terraform-github-actions@master
+    #   with:
+    #     tf_actions_version: 0.14.3
+    #     tf_actions_subcommand: 'plan'
+    #     tf_actions_working_dir: '.'
+    #     tf_actions_comment: true
+
+    # - name: Terraform apply
+    #   if: ${{ github.event.inputs.terraform_action == 'apply' }}
+    #   uses: hashicorp/terraform-github-actions@master
+    #   with:
+    #     tf_actions_version: 0.14.3
+    #     tf_actions_subcommand: ${{ github.event.inputs.terraform_action }}
+    #     tf_actions_working_dir: '.'
+    #     tf_actions_comment: true
+    #     args: '-auto-approve'
     
-    - name: Terraform destroy
-      if: ${{ github.event.inputs.terraform_action == 'destroy' }}
-      uses: hashicorp/terraform-github-actions@master
-      with:
-        tf_actions_version: 0.14.3
-        tf_actions_subcommand: ${{ github.event.inputs.terraform_action }}
-        tf_actions_working_dir: '.'
-        tf_actions_comment: true
-        args: '-auto-approve'
+    # - name: Terraform destroy
+    #   if: ${{ github.event.inputs.terraform_action == 'destroy' }}
+    #   uses: hashicorp/terraform-github-actions@master
+    #   with:
+    #     tf_actions_version: 0.14.3
+    #     tf_actions_subcommand: ${{ github.event.inputs.terraform_action }}
+    #     tf_actions_working_dir: '.'
+    #     tf_actions_comment: true
+    #     args: '-auto-approve'
