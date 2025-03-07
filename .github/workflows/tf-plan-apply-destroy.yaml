@@ -20,7 +20,7 @@ on:
 
 permissions:
   id-token: write  # Required for OIDC authentication with AWS
-  contents: read
+  contents: write
 
 jobs:
   deploy:
