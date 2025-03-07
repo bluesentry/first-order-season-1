@@ -12,9 +12,11 @@ on:
         - apply
         - destroy
         required: true
-  # push:
-  #   branches:
-  #     - main
+  push:
+    branches:
+      - main
+    paths:
+      - 'terraform/**'
 
 permissions:
   id-token: write  # Required for OIDC authentication with AWS
@@ -30,12 +32,12 @@ jobs:
         working-directory: terraform
 
     env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      AWS_REGION: us-east-1
+      AWS_ACCOUNT_ID: 704855531002 # ${{ secrets.AWS_ACCOUNT_ID }}
       ROLE_NAME: Github_Actions_Super_Mario_OIDC_Role
       
     steps:
-
+    
     - name: Checkout repo
       uses: actions/checkout@v4
   
@@ -43,7 +45,7 @@ jobs:
       uses: aws-actions/configure-aws-credentials@v2
       with:
         role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.ROLE_NAME }}
-        aws-region: us-east-1
+        aws-region: ${{ env.AWS_REGION }}
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
