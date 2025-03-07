@@ -52,7 +52,8 @@ jobs:
       
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
-
+      with:
+        terraform_version: 1.11.0
 
     - name: Allow GitHub Actions in EKS Public Access CIDRs
       run: |

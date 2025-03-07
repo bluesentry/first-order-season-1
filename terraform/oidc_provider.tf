@@ -100,6 +100,20 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "elasticloadbalancing:ModifyListener"
         ],
         "Resource" : "*"
+      },
+      {
+        "Sid" : "S3Permissions",
+        "Effect" : "Allow",
+        "Action" : [
+          "s3:ListBucket",
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:HeadObject"  
+        ],
+        "Resource" : [
+          "arn:aws:s3:::bsc.sandbox.terraform.state",
+          "arn:aws:s3:::bsc.sandbox.terraform.state/*"
+        ]
       }
     ]
   })
