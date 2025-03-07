@@ -63,13 +63,17 @@ jobs:
           --public-access-cidrs "${GITHUB_IPS}/32" \
           --approve || true
 
+    # - name: Terraform Init
+    #   uses: hashicorp/terraform-github-actions@master
+    #   with:
+    #     tf_actions_version: 0.14.3
+    #     tf_actions_subcommand: 'init'
+    #     tf_actions_working_dir: '.'
+    #     tf_actions_comment: true
+
     - name: Terraform Init
-      uses: hashicorp/terraform-github-actions@master
-      with:
-        tf_actions_version: 0.14.3
-        tf_actions_subcommand: 'init'
-        tf_actions_working_dir: '.'
-        tf_actions_comment: true
+      run: terraform init -reconfigure
+      working-directory: terraform
 
     - name: Terraform Plan
       run: terraform plan
