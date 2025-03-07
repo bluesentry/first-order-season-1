@@ -64,8 +64,12 @@ jobs:
           --approve || true
 
     - name: Terraform Init
-      run: terraform init
-      working-directory: terraform
+      uses: hashicorp/terraform-github-actions@master
+      with:
+        tf_actions_version: 0.14.3
+        tf_actions_subcommand: 'init'
+        tf_actions_working_dir: '.'
+        tf_actions_comment: true
 
     - name: Terraform Plan
       run: terraform plan
