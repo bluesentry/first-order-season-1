@@ -73,27 +73,21 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Sid" : "S3Permissions",
         "Effect" : "Allow",
         "Action" : [
-          "s3:ListBucket",
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:HeadObject"
+          "s3:*"
         ],
-        "Resource" : [
-          "arn:aws:s3:::bsc.sandbox.terraform.state",
-          "arn:aws:s3:::bsc.sandbox.terraform.state/*"
-        ]
+        "Resource" : "*"
       },
-      {
-        "Sid" : "S3DeleteObjectPermission",
-        "Effect" : "Allow",
-        "Action" : [
-          "s3:DeleteObject"
-        ],
-        "Resource" : [
-          "arn:aws:s3:::bsc.sandbox.terraform.state/ai_ml_competition_2025_0/terraform.tfstate.tflock",
-          "arn:aws:s3:::bsc.sandbox.terraform.state/ai_ml_competition_2025_0/terraform.tfstate"
-        ]
-      },
+      # {
+      #   "Sid" : "S3DeleteObjectPermission",
+      #   "Effect" : "Allow",
+      #   "Action" : [
+      #     "s3:DeleteObject"
+      #   ],
+      #   "Resource" : [
+      #     "arn:aws:s3:::bsc.sandbox.terraform.state/ai_ml_competition_2025_0/terraform.tfstate.tflock",
+      #     "arn:aws:s3:::bsc.sandbox.terraform.state/ai_ml_competition_2025_0/terraform.tfstate"
+      #   ]
+      # },
 
       {
         "Sid" : "ECRPermissions",
