@@ -16,6 +16,10 @@ on:
   #   branches:
   #     - main
 
+permissions:
+  id-token: write  # Required for OIDC authentication with AWS
+  contents: read
+
 jobs:
   deploy:
     name: Deploy Resources to AWS 
@@ -28,7 +32,7 @@ jobs:
     env:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-      ROLE_NAME: ${{ secrets.IAM_ROLE_FOR_GITHUB_ACTIONS }}
+      ROLE_NAME: Github_Actions_Super_Mario_OIDC_Role
       
     steps:
 
