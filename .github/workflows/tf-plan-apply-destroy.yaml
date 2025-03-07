@@ -75,12 +75,12 @@ jobs:
     - name: Terraform Apply
       if: ${{ github.event.inputs.terraform_action == 'apply' }}
       run: terraform apply -auto-approve
-      working-directory: terraform/infrastructure
+      working-directory: terraform
 
     - name: Terraform destroy
       if: ${{ github.event.inputs.terraform_action == 'destroy' }}
       run: terraform destroy -auto-approve
-      working-directory: terraform/infrastructure
+      working-directory: terraform
 
     # Upload logs to S3 after each Terraform action
     - name: Upload Terraform logs to S3
