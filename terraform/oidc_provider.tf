@@ -133,7 +133,8 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "ecr:SetRepositoryPolicy",
           "ecr:InitiateLayerUpload",
           "ecr:UploadLayerPart",
-          "ecr:CompleteLayerUpload"
+          "ecr:CompleteLayerUpload",
+          "ecr:ListTagsForResource"
         ],
         "Resource" : "*"
       },
@@ -167,7 +168,9 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "iam:UpdateAssumeRolePolicy",
           "iam:ListPolicies",
           "iam:GetPolicy",
-          "iam:ListOpenIDConnectProviders"
+          "iam:ListOpenIDConnectProviders",
+          "iam:ListRolePolicies", 
+          "iam:GetPolicy"
         ],
         "Resource" : "*"
       },
@@ -191,7 +194,27 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
           "acm:DescribeCertificate"
         ],
         "Resource" : "*"
+      },
+      {
+        "Sid" : "EC2Permissions",
+        "Effect" : "Allow",
+        "Action" : [
+          "ec2:DescribeVpcs", 
+          "ec2:DescribeDhcpOptions",
+          "ec2:DescribeAvailabilityZones"
+        ],
+        "Resource" : "*"
+      },
+      {
+        "Sid" : "LogPermissions",
+        "Effect" : "Allow",
+        "Action" : [
+          "logs:DescribeLogGroups" 
+        ],
+        "Resource" : "*"
       }
+
+
 
 
     ]
