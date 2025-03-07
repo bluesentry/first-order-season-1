@@ -77,18 +77,6 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         ],
         "Resource" : "*"
       },
-      # {
-      #   "Sid" : "S3DeleteObjectPermission",
-      #   "Effect" : "Allow",
-      #   "Action" : [
-      #     "s3:DeleteObject"
-      #   ],
-      #   "Resource" : [
-      #     "arn:aws:s3:::bsc.sandbox.terraform.state/ai_ml_competition_2025_0/terraform.tfstate.tflock",
-      #     "arn:aws:s3:::bsc.sandbox.terraform.state/ai_ml_competition_2025_0/terraform.tfstate"
-      #   ]
-      # },
-
       {
         "Sid" : "ECRPermissions",
         "Effect" : "Allow",

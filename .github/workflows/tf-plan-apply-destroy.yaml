@@ -69,7 +69,7 @@ jobs:
       working-directory: terraform
 
     - name: Terraform Plan
-      run: terraform plan -out=plan.tfplan > terraform.log 2>&1
+      run: terraform plan  
       working-directory: terraform
 
     - name: Terraform Apply
@@ -81,10 +81,3 @@ jobs:
       if: ${{ github.event.inputs.terraform_action == 'destroy' }}
       run: terraform destroy -auto-approve
       working-directory: terraform
-
-    # Upload logs to S3 after each Terraform action
-    - name: Upload Terraform logs to S3
-      if: ${{ github.event.inputs.terraform_action == 'plan' || github.event.inputs.terraform_action == 'apply' || github.event.inputs.terraform_action == 'destroy' }}
-      run: |
-        # Assuming the Terraform logs are saved to terraform.log
-        aws s3 cp terraform.log s3://noor-meeting-videos/logs/terraform-${{ github.event.inputs.terraform_action }}.log
