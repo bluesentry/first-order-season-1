@@ -65,11 +65,11 @@ jobs:
 
     - name: Terraform Init
       run: terraform init
-      working-directory: terraform/infrastructure
+      working-directory: terraform
 
     - name: Terraform Plan
       run: terraform plan
-      working-directory: terraform/infrastructure
+      working-directory: terraform
     # - name: Terraform Init
     #   uses: hashicorp/terraform-github-actions@master
     #   with:
