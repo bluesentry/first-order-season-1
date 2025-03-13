@@ -55,15 +55,6 @@ jobs:
       with:
         terraform_version: 1.11.0
 
-    - name: Allow GitHub Actions in EKS Public Access CIDRs
-      run: |
-        GITHUB_IPS=$(curl -s https://api.ipify.org )
-        eksctl utils update-cluster-vpc-config \
-          --cluster smarthire \
-          --region us-east-1 \
-          --public-access-cidrs "${GITHUB_IPS}/32" \
-          --approve || true
-
     - name: Terraform Init
       run: terraform init 
       working-directory: terraform
