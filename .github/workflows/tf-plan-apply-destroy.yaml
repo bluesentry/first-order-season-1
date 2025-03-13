@@ -34,7 +34,7 @@ jobs:
     env:
       AWS_REGION: us-east-1
       AWS_ACCOUNT_ID: 704855531002
-      ROLE_NAME: Github_Actions_Super_Mario_OIDC_Role
+      ROLE_NAME: BlueSentry
       
     steps:
     
