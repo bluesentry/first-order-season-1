@@ -78,6 +78,20 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
         "Resource" : "*"
       },
       {
+        "Sid" : "S3StateBucketPermissions",
+        "Effect" : "Allow",
+        "Action" : [
+          "s3:ListBucket",
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:HeadObject"
+        ],
+        "Resource" : [
+          "arn:aws:s3:::bsc.sandbox.terraform.state",
+          "arn:aws:s3:::bsc.sandbox.terraform.state/*"
+        ]
+      },
+      {
         "Sid" : "S3DeleteObjectPermission",
         "Effect" : "Allow",
         "Action" : [
