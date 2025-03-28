@@ -22,7 +22,7 @@ resource "aws_iam_role" "github_actions_ai_ml_role" {
           },
           "StringLike" : {
             # Adjust the repository identifier to match your GitHub org and repo.
-            "token.actions.githubusercontent.com:sub" : "repo:bluesentry/ai_ml_competition_2025_0:*"
+            "token.actions.githubusercontent.com:sub" : "repo:bluesentry/first-order-season-1:*"
           }
         }
       }
