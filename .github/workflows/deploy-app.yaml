@@ -31,7 +31,7 @@ jobs:
       - name: Install kubectl
         uses: azure/setup-kubectl@v4
         id: install
-
+        
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig \
