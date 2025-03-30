@@ -180,3 +180,37 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
     ]
   })
 }
+
+resource "aws_iam_policy" "fluentbit_s3_write" {
+  name = "FluentBitS3Write"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid : "AllowS3Put",
+        Effect : "Allow",
+        Action : [
+          "s3:PutObject",
+          "s3:PutObjectAcl"
+        ],
+        Resource : "arn:aws:s3:::first-order-application-logs/*"
+      },
+      {
+        Sid : "AllowKMSDecrypt",
+        Effect : "Allow",
+        Action : [
+          "kms:GenerateDataKey",
+          "kms:Encrypt",
+          "kms:Decrypt"
+        ],
+        Resource : data.aws_kms_key.aws_s3.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "fluentbit_attach_s3_write" {
+  role       = aws_iam_role.fluentbit.name
+  policy_arn = aws_iam_policy.fluentbit_s3_write.arn
+}
