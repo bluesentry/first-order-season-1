@@ -31,7 +31,7 @@ jobs:
       - name: Install kubectl
         uses: azure/setup-kubectl@v4
         id: install
-        
+
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig \
@@ -43,17 +43,17 @@ jobs:
         with:
           version: v3.13.3
 
-    #   - name: Add ArgoCD Helm repo
-    #     run: |
-    #       helm repo add argo https://argoproj.github.io/argo-helm
-    #       helm repo update
+      - name: Add ArgoCD Helm repo
+        run: |
+          helm repo add argo https://argoproj.github.io/argo-helm
+          helm repo update
 
-    #   - name: Install ArgoCD via Helm
-    #     run: |
-    #       helm upgrade --install argo-cd argo/argo-cd \
-    #         --namespace argocd \
-    #         --create-namespace \
-    #         --set server.extraArgs={--insecure}
+      - name: Install ArgoCD via Helm
+        run: |
+          helm upgrade --install argo-cd argo/argo-cd \
+            --namespace argocd \
+            --create-namespace \
+            --set server.extraArgs={--insecure}
 
       - name: Deploy ArgoCD Applications
         working-directory: k8s/master
