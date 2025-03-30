@@ -1,6 +1,6 @@
 appEnvironments:
   dev:
-    argoHostname: first-order-ai.brewsentry.com
+    argoHostname: argocd-ai-ml-competition-2025-0.brewsentry.com
     awsAccountNumber: '704855531002'
     clusterName: first_order_ai_ml
     environment: first_order_ai_ml
