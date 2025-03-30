@@ -1,4 +1,4 @@
-name: Deploy ArgoCD Applications
+name: Deploy Applications
 
 on:
   workflow_dispatch:
