@@ -29,11 +29,9 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Install kubectl
-        run: |
-          curl -o kubectl https://s3.us-west-2.amazonaws.com/amazon-eks/1.29.1/2024-03-14/bin/linux/amd64/kubectl
-          chmod +x ./kubectl
-          sudo mv ./kubectl /usr/local/bin/
-
+        uses: azure/setup-kubectl@v4
+        id: install
+        
       - name: Update kubeconfig
         run: |
           aws eks update-kubeconfig \
