@@ -29,7 +29,7 @@ spec:
   source:
     repoURL: https://fluent.github.io/helm-charts
     chart: fluent-bit
-    targetRevision: latest
+    targetRevision: 0.48.9
     helm:
       values: |
         serviceAccount:
