@@ -7,7 +7,7 @@ spec:
   destination:
     namespace: logging
     server: https://kubernetes.default.svc
-  project: devops
+  project: logging
   source:
     repoURL: https://fluent.github.io/helm-charts
     chart: fluent-bit
@@ -18,7 +18,7 @@ spec:
           create: true
           name: fluentbit
           annotations:
-            eks.amazonaws.com/role-arn: arn:aws:iam::{{ .Values.awsAccountNumber }}:role/eks-fluentbit-role
+            eks.amazonaws.com/role-arn: arn:aws:iam::704855531002:role/eks-fluentbit-role
 
         input:
           tail:
