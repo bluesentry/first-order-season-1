@@ -181,8 +181,33 @@ resource "aws_iam_role_policy" "github_actions_workflow" {
   })
 }
 
+
+# Fluent Bit IRSA Role
+resource "aws_iam_role" "fluentbit" {
+  name = "eks-fluentbit-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Federated = module.eks.oidc_provider_arn
+        },
+        Action = "sts:AssumeRoleWithWebIdentity",
+        Condition = {
+          StringEquals = {
+            "${replace(module.eks.oidc_provider_arn, "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/", "")}:sub" = "system:serviceaccount:logging:fluentbit"
+          }
+        }
+      }
+    ]
+  })
+}
+
+
 resource "aws_iam_policy" "fluentbit_s3_write" {
-  name = "FluentBitS3Write"
+  name = "FluentBitS3Policy"
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -190,20 +215,13 @@ resource "aws_iam_policy" "fluentbit_s3_write" {
       {
         Sid : "AllowS3Put",
         Effect : "Allow",
-        Action : [
-          "s3:PutObject",
-          "s3:PutObjectAcl"
-        ],
+        Action : ["s3:PutObject", "s3:PutObjectAcl"],
         Resource : "arn:aws:s3:::first-order-application-logs/*"
       },
       {
         Sid : "AllowKMSDecrypt",
         Effect : "Allow",
-        Action : [
-          "kms:GenerateDataKey",
-          "kms:Encrypt",
-          "kms:Decrypt"
-        ],
+        Action : ["kms:GenerateDataKey", "kms:Encrypt", "kms:Decrypt"],
         Resource : data.aws_kms_key.aws_s3.arn
       }
     ]
