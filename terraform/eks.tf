@@ -48,15 +48,13 @@ module "eks" {
 
   access_entries = {
     sso_admin = {
-      principal_arn     = "arn:aws:iam::704855531002:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_AdministratorAccess_de991beb9b0ec0d6"
-      kubernetes_groups = ["system:masters"]
-      type              = "STANDARD"
+      principal_arn = "arn:aws:iam::704855531002:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_AdministratorAccess_de991beb9b0ec0d6"
+      type          = "STANDARD"
     }
 
     cluster_creator = {
-      principal_arn     = "arn:aws:iam::704855531002:role/BlueSentry"
-      kubernetes_groups = ["system:masters"]
-      type              = "STANDARD"
+      principal_arn = "arn:aws:iam::704855531002:role/BlueSentry"
+      type          = "STANDARD"
     }
   }
 
