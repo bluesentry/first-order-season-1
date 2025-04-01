@@ -58,4 +58,4 @@ jobs:
       - name: Deploy ArgoCD Applications
         working-directory: k8s/master
         run: |
-          helm template . | kubectl apply -f -
+          helm template . | kubectl apply --validate=false -f -
