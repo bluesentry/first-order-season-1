@@ -197,7 +197,7 @@ resource "aws_iam_role" "fluentbit" {
         Action = "sts:AssumeRoleWithWebIdentity",
         Condition = {
           StringEquals = {
-            "${replace(module.eks.oidc_provider_arn, "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/", "")}:sub" = "system:serviceaccount:logging:fluentbit"
+            "${replace(module.eks.oidc_provider_arn, "arn:aws:iam::${data.aws_caller_identity.this.account_id}:oidc-provider/", "")}:sub" = "system:serviceaccount:logging:fluentbit"
           }
         }
       }
