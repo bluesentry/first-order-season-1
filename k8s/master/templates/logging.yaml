@@ -1,4 +1,4 @@
-{{ range $environment, $values := .Values.appEnvironments }}
+{{- range $environment, $values := .Values.appEnvironments }}
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
@@ -19,7 +19,7 @@ spec:
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: logging-master
+  name: fluent-bit
   namespace: argocd
 spec:
   destination:
@@ -27,23 +27,31 @@ spec:
     server: https://kubernetes.default.svc
   project: logging
   source:
-    path: k8s/logging
-    repoURL: {{ $values.repoUrl }}
-    targetRevision: HEAD
+    repoURL: https://fluent.github.io/helm-charts
+    chart: fluent-bit
+    targetRevision: latest
     helm:
-      valueFiles:
-        - values.yaml
-{{- with $values }}
-      values: |- {{ toYaml . | nindent 8 }}
+      values: |
+        serviceAccount:
+          create: true
+          name: fluentbit
+          annotations:
+            eks.amazonaws.com/role-arn: arn:aws:iam::704855531002:role/eks-fluentbit-role
+
+        input:
+          tail:
+            enabled: true
+            path: /var/log/containers/*.log
+            parser: docker
+
+        output:
+          s3:
+            enabled: true
+            bucket: first-order-application-logs
+            region: us-east-1
+            compression: gzip
+            total_file_size: 5M
+            upload_timeout: 5s
+            store_dir: /var/log/fluentbit
+            s3_key_format: /fluent-bit-logs/%Y/%m/%d/%H/%M/%S-${HOSTNAME}.json.gz
 {{- end }}
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    retry:
-      limit: 2
-      backoff:
-        duration: 5s
-        factor: 2
-        maxDuration: 3m
-{{ end }}
