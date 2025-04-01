@@ -33,9 +33,9 @@ spec:
     helm:
       valueFiles:
         - values.yaml
-      {{- with $values }}
+{{- with $values }}
       values: |- {{ toYaml . | nindent 8 }}
-      {{- end }}
+{{- end }}
   syncPolicy:
     automated:
       prune: true
@@ -46,3 +46,4 @@ spec:
         duration: 5s
         factor: 2
         maxDuration: 3m
+{{ end }}
