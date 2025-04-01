@@ -38,24 +38,37 @@ spec:
           annotations:
             eks.amazonaws.com/role-arn: arn:aws:iam::704855531002:role/eks-fluentbit-role
 
-        input:
-          tail:
-            enabled: true
-            path: /var/log/containers/*.log
-            parser: docker
+        config:
+          inputs: |
+            [INPUT]
+                Name tail
+                Path /var/log/containers/*.log
+                Parser docker
+                Tag kube.*
+                Mem_Buf_Limit 5MB
+                Skip_Long_Lines On
 
-        output:
-          s3:
-            enabled: true
-            bucket: first-order-application-logs
-            region: us-east-1
-            compression: gzip
-            total_file_size: 5M
-            upload_timeout: 5s
-            store_dir: /var/log/fluentbit
-            s3_key_format: /fluent-bit-logs/%Y/%m/%d/%H/%M/%S-${HOSTNAME}.json.gz
-          es:
-            enabled: false
+          filters: |
+            [FILTER]
+                Name kubernetes
+                Match kube.*
+                Merge_Log On
+                Keep_Log Off
+                K8S-Logging.Parser On
+                K8S-Logging.Exclude On
+
+          outputs: |
+            [OUTPUT]
+                Name s3
+                Match *
+                Bucket first-order-application-logs
+                Region us-east-1
+                compression gzip
+                total_file_size 5M
+                upload_timeout 5s
+                store_dir /var/log/fluentbit
+                s3_key_format /fluent-bit-logs/%Y/%m/%d/%H/%M/%S-${HOSTNAME}.json.gz
+
   syncPolicy:
     automated:
       prune: true
