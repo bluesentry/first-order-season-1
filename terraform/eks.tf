@@ -46,20 +46,20 @@ module "eks" {
     AmazonEC2ContainerRegistryReadOnly = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
   }
 
-  access_entries = {
-    sso_admin = {
-      principal_arn = "arn:aws:iam::704855531002:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_AdministratorAccess_de991beb9b0ec0d6"
-      type          = "STANDARD"
-    }
+  # access_entries = {
+  #   sso_admin = {
+  #     principal_arn = "arn:aws:iam::704855531002:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_AdministratorAccess_de991beb9b0ec0d6"
+  #     type          = "STANDARD"
+  #   }
 
-    cluster_creator = {
-      principal_arn = "arn:aws:iam::704855531002:role/BlueSentry"
-      type          = "STANDARD"
-    }
-  }
+  #   cluster_creator = {
+  #     principal_arn = "arn:aws:iam::704855531002:role/BlueSentry"
+  #     type          = "STANDARD"
+  #   }
+  # }
 
   # Turn off automatic admin access to prevent conflict
-  enable_cluster_creator_admin_permissions = false
+  enable_cluster_creator_admin_permissions = true
 
   cluster_tags = var.tags
 
