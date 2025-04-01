@@ -54,6 +54,8 @@ spec:
             upload_timeout: 5s
             store_dir: /var/log/fluentbit
             s3_key_format: /fluent-bit-logs/%Y/%m/%d/%H/%M/%S-${HOSTNAME}.json.gz
+          es:
+            enabled: false
   syncPolicy:
     automated:
       prune: true
