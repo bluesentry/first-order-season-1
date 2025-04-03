@@ -63,7 +63,8 @@ data "aws_iam_policy_document" "glue_policy_doc" {
     ]
     resources = [
       "arn:aws:glue:${var.region}:${data.aws_caller_identity.current.account_id}:catalog",
-      "arn:aws:glue:${var.region}:${data.aws_caller_identity.current.account_id}:database/${aws_glue_catalog_database.glue_db.name}"
+      "arn:aws:glue:${var.region}:${data.aws_caller_identity.current.account_id}:database/${aws_glue_catalog_database.glue_db.name}",
+      "arn:aws:glue:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_glue_catalog_database.glue_db.name}/*"
     ]
   }
 }
