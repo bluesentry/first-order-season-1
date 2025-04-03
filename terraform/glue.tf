@@ -66,9 +66,8 @@ resource "aws_lakeformation_permissions" "grant_all_to_bluesentry" {
 }
 
 resource "aws_lakeformation_resource" "fluentbit_logs" {
-  arn                     = "arn:aws:s3:::${module.log_bucket.s3_bucket_id}/fluent-bit-logs"
-  role_arn                = aws_iam_role.glue_role.arn
-  use_service_linked_role = true
+  arn      = "arn:aws:s3:::${module.log_bucket.s3_bucket_id}/fluent-bit-logs"
+  role_arn = aws_iam_role.glue_role.arn
 }
 
 # Grants Glue role access to the glue db, needed for the crawler to be able to write
