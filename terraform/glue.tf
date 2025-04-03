@@ -126,7 +126,7 @@ resource "aws_iam_role_policy" "glue_logs_policy" {
           "logs:CreateLogStream",
           "logs:CreateLogGroup"
         ],
-        Resource = "arn:aws:logs:us-east-1:704855531002:log-group:/aws-glue/crawlers:log-stream:first-order-log-crawler"
+        Resource = "arn:aws:logs:us-east-1:704855531002:log-group:/aws-glue/crawlers:*"
       }
     ]
   })
