@@ -42,11 +42,15 @@ resource "aws_iam_role_policy" "glue_policy" {
 
 data "aws_iam_policy_document" "glue_policy_doc" {
   statement {
-    actions   = ["s3:GetObject", "s3:PutObject"]
-    resources = ["${module.log_bucket.s3_bucket_arn}/*"]
+    actions = ["s3:GetObject", "s3:ListBucket"]
+    resources = [
+      "${module.log_bucket.s3_bucket_arn}/*", # Full access to S3 objects
+      "${module.log_bucket.s3_bucket_arn}"    # Access to the bucket itself
+    ]
   }
 }
 
+# Granting Lake Formation Permissions to SSO Admin Role
 resource "aws_lakeformation_permissions" "grant_all_to_sso_admin" {
   principal   = "arn:aws:iam::704855531002:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_AdministratorAccess_de991beb9b0ec0d6"
   permissions = ["ALL"]
@@ -56,6 +60,7 @@ resource "aws_lakeformation_permissions" "grant_all_to_sso_admin" {
   }
 }
 
+# Granting Lake Formation Permissions to BlueSentry Role
 resource "aws_lakeformation_permissions" "grant_all_to_bluesentry" {
   principal   = "arn:aws:iam::704855531002:role/BlueSentry"
   permissions = ["ALL"]
@@ -65,12 +70,13 @@ resource "aws_lakeformation_permissions" "grant_all_to_bluesentry" {
   }
 }
 
+# Registering S3 Path in Lake Formation for FluentBit Logs
 resource "aws_lakeformation_resource" "fluentbit_logs" {
   arn      = "arn:aws:s3:::${module.log_bucket.s3_bucket_id}/fluent-bit-logs"
   role_arn = aws_iam_role.glue_role.arn
 }
 
-# Grants Glue role access to the glue db, needed for the crawler to be able to write
+# Granting Glue Role Permissions to the Glue Database, this is needed for the crawler to work 
 resource "aws_lakeformation_permissions" "grant_db_access_to_glue" {
   principal   = aws_iam_role.glue_role.arn
   permissions = ["ALL"]
@@ -80,7 +86,7 @@ resource "aws_lakeformation_permissions" "grant_db_access_to_glue" {
   }
 }
 
-# Grants Glue access to the S3 data location
+# Granting Glue Role Access to the S3 Data Location
 resource "aws_lakeformation_permissions" "grant_glue_access_to_fluentbit_logs" {
   principal   = aws_iam_role.glue_role.arn
   permissions = ["DATA_LOCATION_ACCESS"]
@@ -88,4 +94,20 @@ resource "aws_lakeformation_permissions" "grant_glue_access_to_fluentbit_logs" {
   data_location {
     arn = aws_lakeformation_resource.fluentbit_logs.arn
   }
+}
+
+# Allowing Glue Role to Decrypt KMS-Encrypted S3 Bucket
+resource "aws_iam_role_policy" "glue_kms_policy" {
+  role = aws_iam_role.glue_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = "kms:Decrypt",
+        Resource = "arn:aws:kms:us-east-1:704855531002:key/YOUR-KMS-KEY-ID"
+      }
+    ]
+  })
 }
