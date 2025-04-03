@@ -9,7 +9,7 @@ resource "aws_glue_crawler" "glue_crawler" {
   schedule      = "cron(0 12 * * ? *)"
 
   s3_target {
-    path = "s3://${module.log_bucket.bucket}/fluent-bit-logs/"
+    path = "s3://${module.log_bucket.s3_bucket_id}/fluent-bit-logs/"
   }
 
   schema_change_policy {
