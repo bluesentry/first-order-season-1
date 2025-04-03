@@ -110,6 +110,10 @@ resource "aws_lakeformation_permissions" "grant_all_to_sso_admin" {
   database {
     name = aws_glue_catalog_database.glue_db.name
   }
+  table {
+    database_name = aws_glue_catalog_database.glue_db.name
+    wildcard      = true
+  }
 }
 
 # Granting Lake Formation Permissions to BlueSentry Role
@@ -120,7 +124,12 @@ resource "aws_lakeformation_permissions" "grant_all_to_bluesentry" {
   database {
     name = aws_glue_catalog_database.glue_db.name
   }
+  table {
+    database_name = aws_glue_catalog_database.glue_db.name
+    wildcard      = true
+  }
 }
+
 
 resource "aws_lakeformation_resource" "fluentbit_logs" {
   arn      = "arn:aws:s3:::${module.log_bucket.s3_bucket_id}/fluent-bit-logs"
@@ -134,6 +143,10 @@ resource "aws_lakeformation_permissions" "grant_db_access_to_glue" {
 
   database {
     name = aws_glue_catalog_database.glue_db.name
+  }
+  table {
+    database_name = aws_glue_catalog_database.glue_db.name
+    wildcard      = true
   }
 }
 
