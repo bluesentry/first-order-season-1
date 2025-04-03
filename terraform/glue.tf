@@ -9,7 +9,7 @@ resource "aws_glue_crawler" "glue_crawler" {
   schedule      = "cron(0 12 * * ? *)"
 
   s3_target {
-    path = "s3://first-order-application-logs/fluent-bit-logs/"
+    path = "s3://${module.log_bucket.bucket}/fluent-bit-logs/"
   }
 
   schema_change_policy {
@@ -43,6 +43,6 @@ resource "aws_iam_role_policy" "glue_policy" {
 data "aws_iam_policy_document" "glue_policy_doc" {
   statement {
     actions   = ["s3:GetObject", "s3:PutObject"]
-    resources = ["arn:aws:s3:::first-order-application-logs/*"]
+    resources = ["${module.log_bucket.s3_bucket_arn}/*"]
   }
 }

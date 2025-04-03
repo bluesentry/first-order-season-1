@@ -38,8 +38,8 @@ resource "aws_iam_role_policy" "sagemaker_s3_access" {
           "s3:ListBucket",
         ],
         Resource = [
-          "arn:aws:s3:::first-order-application-logs/*",
-          "arn:aws:s3:::first-order-application-logs",
+          "${module.log_bucket.s3_bucket_arn}/*",
+          "${module.log_bucket.s3_bucket_arn}",
         ],
       },
     ],
