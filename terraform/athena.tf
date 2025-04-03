@@ -1,4 +1,3 @@
-# Create IAM Role for Athena
 resource "aws_iam_role" "athena_role" {
   name = "athena_execution_role"
 
@@ -16,7 +15,6 @@ resource "aws_iam_role" "athena_role" {
   })
 }
 
-# IAM Policy for Athena Access
 resource "aws_iam_policy" "athena_access" {
   name   = "AthenaAccessPolicy"
   policy = data.aws_iam_policy_document.athena_policy.json
@@ -59,7 +57,6 @@ data "aws_iam_policy_document" "athena_policy" {
   }
 }
 
-# Attach policy to Athena Role
 resource "aws_iam_role_policy_attachment" "athena_policy_attachment" {
   role       = aws_iam_role.athena_role.name
   policy_arn = aws_iam_policy.athena_access.arn
@@ -74,7 +71,7 @@ resource "aws_athena_workgroup" "main" {
     publish_cloudwatch_metrics_enabled = true
 
     result_configuration {
-      output_location = "${module.log_bucket.s3_bucket_arn}/athena-results/"
+      output_location = "s3://${module.log_bucket.s3_bucket_id}/athena-results/"
     }
   }
 
