@@ -65,10 +65,30 @@ data "aws_iam_policy_document" "glue_policy_doc" {
       "glue:UpdateTable",
       "glue:CreatePartition",
       "glue:DeletePartition",
-      "glue:UpdatePartition"
+      "glue:UpdatePartition",
+      "glue:BatchGetPartition",
+      "glue:BatchCreatePartition",
+      "glue:BatchDeletePartition",
+      "glue:BatchUpdatePartition",
+      "glue:BatchGetTable",
+      "glue:BatchGetTableVersion",
+      "glue:CreateConnection",
+      "glue:DeleteConnection",
+      "glue:GetConnection",
+      "glue:UpdateConnection",
+      "glue:GetJob",
+      "glue:StartJobRun",
+      "glue:StopJobRun",
+      "glue:GetJobRun",
+      "glue:UpdateJob",
+      "glue:DeleteJob",
+      "glue:CreateSecurityConfiguration",
+      "glue:UpdateSecurityConfiguration",
+      "glue:DeleteSecurityConfiguration",
+      "glue:GetSecurityConfiguration"
     ]
     resources = [
-      "arn:aws:glue:${var.region}:${data.aws_caller_identity.current.account_id}:catalog", # Glue catalog
+      "arn:aws:glue:${var.region}:${data.aws_caller_identity.current.account_id}:catalog",
       "arn:aws:glue:${var.region}:${data.aws_caller_identity.current.account_id}:database/${aws_glue_catalog_database.glue_db.name}",
       "arn:aws:glue:${var.region}:${data.aws_caller_identity.current.account_id}:table/${aws_glue_catalog_database.glue_db.name}/*",
       "arn:aws:glue:${var.region}:${data.aws_caller_identity.current.account_id}:partition/${aws_glue_catalog_database.glue_db.name}/*/*",
