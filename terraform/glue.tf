@@ -1,3 +1,5 @@
+data "aws_caller_identity" "current" {}
+
 resource "aws_glue_catalog_database" "glue_db" {
   name = "first-order-glue-db"
 }
@@ -35,7 +37,6 @@ resource "aws_iam_role" "glue_role" {
   })
 }
 
-# IAM Policy for Glue Role to Access S3
 resource "aws_iam_role_policy" "glue_policy" {
   role   = aws_iam_role.glue_role.id
   policy = data.aws_iam_policy_document.glue_policy_doc.json
@@ -47,6 +48,14 @@ data "aws_iam_policy_document" "glue_policy_doc" {
     resources = [
       "${module.log_bucket.s3_bucket_arn}/*",
       "${module.log_bucket.s3_bucket_arn}"
+    ]
+  }
+
+  statement {
+    actions = ["glue:GetDatabase", "glue:GetTable", "glue:GetTables"]
+    resources = [
+      "arn:aws:glue:${var.region}:${data.aws_caller_identity.current.account_id}:catalog",
+      "arn:aws:glue:${var.region}:${data.aws_caller_identity.current.account_id}:database/${aws_glue_catalog_database.glue_db.name}"
     ]
   }
 }
