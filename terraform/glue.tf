@@ -101,53 +101,66 @@ data "aws_iam_policy_document" "glue_policy_doc" {
   }
 }
 
-
-# Granting Lake Formation Permissions to SSO Admin Role
-resource "aws_lakeformation_permissions" "grant_all_to_sso_admin" {
+resource "aws_lakeformation_permissions" "grant_db_permissions_to_sso_admin" {
   principal   = "arn:aws:iam::704855531002:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_AdministratorAccess_de991beb9b0ec0d6"
   permissions = ["ALL"]
 
   database {
     name = aws_glue_catalog_database.glue_db.name
   }
+}
+
+resource "aws_lakeformation_permissions" "grant_table_permissions_to_sso_admin" {
+  principal   = "arn:aws:iam::704855531002:role/aws-reserved/sso.amazonaws.com/AWSReservedSSO_AdministratorAccess_de991beb9b0ec0d6"
+  permissions = ["ALL"]
+
   table {
     database_name = aws_glue_catalog_database.glue_db.name
     wildcard      = true
   }
 }
 
-# Granting Lake Formation Permissions to BlueSentry Role
-resource "aws_lakeformation_permissions" "grant_all_to_bluesentry" {
+resource "aws_lakeformation_permissions" "grant_db_permissions_to_bluesentry" {
   principal   = "arn:aws:iam::704855531002:role/BlueSentry"
   permissions = ["ALL"]
 
   database {
     name = aws_glue_catalog_database.glue_db.name
   }
+}
+
+resource "aws_lakeformation_permissions" "grant_table_permissions_to_bluesentry" {
+  principal   = "arn:aws:iam::704855531002:role/BlueSentry"
+  permissions = ["ALL"]
+
   table {
     database_name = aws_glue_catalog_database.glue_db.name
     wildcard      = true
   }
 }
 
-
-resource "aws_lakeformation_resource" "fluentbit_logs" {
-  arn      = "arn:aws:s3:::${module.log_bucket.s3_bucket_id}/fluent-bit-logs"
-  role_arn = aws_iam_role.glue_role.arn
-}
-
-# Granting Glue Role Permissions to the Glue Database, needed for crawler
-resource "aws_lakeformation_permissions" "grant_db_access_to_glue" {
+resource "aws_lakeformation_permissions" "grant_db_permissions_to_glue" {
   principal   = aws_iam_role.glue_role.arn
   permissions = ["ALL"]
 
   database {
     name = aws_glue_catalog_database.glue_db.name
   }
+}
+
+resource "aws_lakeformation_permissions" "grant_table_permissions_to_glue" {
+  principal   = aws_iam_role.glue_role.arn
+  permissions = ["ALL"]
+
   table {
     database_name = aws_glue_catalog_database.glue_db.name
     wildcard      = true
   }
+}
+
+resource "aws_lakeformation_resource" "fluentbit_logs" {
+  arn      = "arn:aws:s3:::${module.log_bucket.s3_bucket_id}/fluent-bit-logs"
+  role_arn = aws_iam_role.glue_role.arn
 }
 
 resource "aws_lakeformation_permissions" "grant_glue_access_to_fluentbit_logs" {
