@@ -35,6 +35,7 @@ resource "aws_iam_role" "glue_role" {
   })
 }
 
+# IAM Policy for Glue Role to Access S3
 resource "aws_iam_role_policy" "glue_policy" {
   role   = aws_iam_role.glue_role.id
   policy = data.aws_iam_policy_document.glue_policy_doc.json
@@ -44,8 +45,8 @@ data "aws_iam_policy_document" "glue_policy_doc" {
   statement {
     actions = ["s3:GetObject", "s3:ListBucket"]
     resources = [
-      "${module.log_bucket.s3_bucket_arn}/*", # Full access to S3 objects
-      "${module.log_bucket.s3_bucket_arn}"    # Access to the bucket itself
+      "${module.log_bucket.s3_bucket_arn}/*",
+      "${module.log_bucket.s3_bucket_arn}"
     ]
   }
 }
@@ -76,7 +77,7 @@ resource "aws_lakeformation_resource" "fluentbit_logs" {
   role_arn = aws_iam_role.glue_role.arn
 }
 
-# Granting Glue Role Permissions to the Glue Database, this is needed for the crawler to work 
+# Granting Glue Role Permissions to the Glue Database, needed for crawler
 resource "aws_lakeformation_permissions" "grant_db_access_to_glue" {
   principal   = aws_iam_role.glue_role.arn
   permissions = ["ALL"]
@@ -107,6 +108,25 @@ resource "aws_iam_role_policy" "glue_kms_policy" {
         Effect   = "Allow",
         Action   = "kms:Decrypt",
         Resource = "arn:aws:kms:us-east-1:704855531002:key/YOUR-KMS-KEY-ID"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "glue_logs_policy" {
+  role = aws_iam_role.glue_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:PutLogEvents",
+          "logs:CreateLogStream",
+          "logs:CreateLogGroup"
+        ],
+        Resource = "arn:aws:logs:us-east-1:704855531002:log-group:/aws-glue/crawlers:log-stream:first-order-log-crawler"
       }
     ]
   })
