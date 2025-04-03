@@ -44,7 +44,11 @@ resource "aws_iam_role_policy" "glue_policy" {
 
 data "aws_iam_policy_document" "glue_policy_doc" {
   statement {
-    actions = ["s3:GetObject", "s3:ListBucket"]
+    actions = [
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:PutObject"
+    ]
     resources = [
       "${module.log_bucket.s3_bucket_arn}/*",
       "${module.log_bucket.s3_bucket_arn}"
@@ -52,7 +56,11 @@ data "aws_iam_policy_document" "glue_policy_doc" {
   }
 
   statement {
-    actions = ["glue:GetDatabase", "glue:GetTable", "glue:GetTables"]
+    actions = [
+      "glue:GetDatabase",
+      "glue:GetTable",
+      "glue:GetTables"
+    ]
     resources = [
       "arn:aws:glue:${var.region}:${data.aws_caller_identity.current.account_id}:catalog",
       "arn:aws:glue:${var.region}:${data.aws_caller_identity.current.account_id}:database/${aws_glue_catalog_database.glue_db.name}"
@@ -80,7 +88,6 @@ resource "aws_lakeformation_permissions" "grant_all_to_bluesentry" {
   }
 }
 
-# Registering S3 Path in Lake Formation for FluentBit Logs
 resource "aws_lakeformation_resource" "fluentbit_logs" {
   arn      = "arn:aws:s3:::${module.log_bucket.s3_bucket_id}/fluent-bit-logs"
   role_arn = aws_iam_role.glue_role.arn
@@ -96,7 +103,6 @@ resource "aws_lakeformation_permissions" "grant_db_access_to_glue" {
   }
 }
 
-# Granting Glue Role Access to the S3 Data Location
 resource "aws_lakeformation_permissions" "grant_glue_access_to_fluentbit_logs" {
   principal   = aws_iam_role.glue_role.arn
   permissions = ["DATA_LOCATION_ACCESS"]
@@ -106,7 +112,6 @@ resource "aws_lakeformation_permissions" "grant_glue_access_to_fluentbit_logs" {
   }
 }
 
-# Allowing Glue Role to Decrypt KMS-Encrypted S3 Bucket
 resource "aws_iam_role_policy" "glue_kms_policy" {
   role = aws_iam_role.glue_role.id
 
@@ -116,7 +121,7 @@ resource "aws_iam_role_policy" "glue_kms_policy" {
       {
         Effect   = "Allow",
         Action   = "kms:Decrypt",
-        Resource = "arn:aws:kms:us-east-1:704855531002:key/YOUR-KMS-KEY-ID"
+        Resource = "arn:aws:kms:${var.region}:${data.aws_caller_identity.current.account_id}:key/${data.aws_kms_key.aws_s3.key_id}"
       }
     ]
   })
@@ -135,7 +140,7 @@ resource "aws_iam_role_policy" "glue_logs_policy" {
           "logs:CreateLogStream",
           "logs:CreateLogGroup"
         ],
-        Resource = "arn:aws:logs:us-east-1:704855531002:log-group:/aws-glue/crawlers:*"
+        Resource = "arn:aws:logs:${var.region}:${data.aws_caller_identity.current.account_id}:log-group:/aws-glue/crawlers:*"
       }
     ]
   })
