@@ -40,6 +40,7 @@ jobs:
           role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.ROLE_NAME }}
           aws-region: ${{ env.AWS_REGION }}
       
+      # We'll keep the timestamp for the workflow-info.json file, but not use it for folder structure
       - name: Generate timestamp
         id: timestamp
         run: echo "TIMESTAMP=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_ENV
@@ -298,17 +299,24 @@ jobs:
           # Get workflow name for folder structure (replace spaces with underscores)
           SAFE_WORKFLOW_NAME=$(echo "${{ env.WORKFLOW_NAME }}" | tr ' ' '_')
           
+          # Debug: Print the run ID to make sure it's set correctly
+          echo "Debug - Using Run ID: ${{ env.RUN_ID }}"
+          
+          # Create a more explicit folder structure based on run ID
+          RUN_ID_FOLDER="run_${{ env.RUN_ID }}"
+          echo "Using folder: $RUN_ID_FOLDER"
+          
           # Upload all logs to S3 using run ID as the folder name
           echo "Uploading workflow logs to S3..."
-          aws s3 sync /tmp/workflow-logs/ s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/run_${{ env.RUN_ID }}/raw/
+          aws s3 sync /tmp/workflow-logs/ "s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/${RUN_ID_FOLDER}/raw/"
           
           # Upload processed logs to a separate prefix
           echo "Uploading processed logs for LLM analysis..."
-          aws s3 sync /tmp/workflow-logs/processed/ s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/run_${{ env.RUN_ID }}/processed/
+          aws s3 sync /tmp/workflow-logs/processed/ "s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/${RUN_ID_FOLDER}/processed/"
           
           echo "Logs uploaded successfully to:"
-          echo "- Raw logs: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/run_${{ env.RUN_ID }}/raw/"
-          echo "- Processed logs: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/run_${{ env.RUN_ID }}/processed/"
+          echo "- Raw logs: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/${RUN_ID_FOLDER}/raw/"
+          echo "- Processed logs: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/${RUN_ID_FOLDER}/processed/"
           
           # Also create a "latest" symlink for easy access to the most recent logs
           if [ "${{ github.event_name }}" == "workflow_run" ] || [ -z "${{ github.event.inputs.run_id }}" ]; then
@@ -318,11 +326,11 @@ jobs:
             echo "${{ env.RUN_ID }}" > /tmp/latest_run_id
             
             # Upload the file to the latest location
-            aws s3 cp /tmp/latest_run_id s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/latest_run_id
+            aws s3 cp /tmp/latest_run_id "s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/latest_run_id"
             
             # Copy the processed logs to the latest location
-            aws s3 sync s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/run_${{ env.RUN_ID }}/processed/ \
-                        s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/latest/
+            aws s3 sync "s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/${RUN_ID_FOLDER}/processed/" \
+                        "s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/latest/"
             
             echo "Latest logs also available at: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/latest/"
           fi
