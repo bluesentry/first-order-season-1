@@ -167,8 +167,24 @@ jobs:
           echo "## Log Files" >> /tmp/workflow-logs/processed/consolidated_logs.md
           echo "" >> /tmp/workflow-logs/processed/consolidated_logs.md
           
-          # Process each log file
-          for log_file in $(find /tmp/workflow-logs -type f -name "*.txt" | sort); do
+          # Create a directory to store sanitized log files
+          mkdir -p /tmp/workflow-logs/sanitized
+          
+          # First, sanitize log filenames by copying them to a new directory with safe names
+          log_index=1
+          find /tmp/workflow-logs -type f -name "*.txt" | sort | while read log_file; do
+            original_filename=$(basename "$log_file")
+            safe_filename="log_${log_index}_${original_filename//[^a-zA-Z0-9._-]/_}"
+            
+            # Copy the file with a safe name
+            cp "$log_file" "/tmp/workflow-logs/sanitized/$safe_filename"
+            echo "Sanitized $original_filename to $safe_filename"
+            
+            ((log_index++))
+          done
+          
+          # Process each sanitized log file
+          for log_file in $(find /tmp/workflow-logs/sanitized -type f | sort); do
             filename=$(basename "$log_file")
             echo "Processing $filename..."
             
@@ -177,8 +193,12 @@ jobs:
             echo "" >> /tmp/workflow-logs/processed/consolidated_logs.md
             echo '```' >> /tmp/workflow-logs/processed/consolidated_logs.md
             
-            # Add log content
-            cat "$log_file" >> /tmp/workflow-logs/processed/consolidated_logs.md
+            # Add log content - use cat with error handling
+            if [ -f "$log_file" ]; then
+              cat "$log_file" >> /tmp/workflow-logs/processed/consolidated_logs.md 2>/dev/null || echo "Error reading file content" >> /tmp/workflow-logs/processed/consolidated_logs.md
+            else
+              echo "File not found: $log_file" >> /tmp/workflow-logs/processed/consolidated_logs.md
+            fi
             
             # Close code block
             echo '```' >> /tmp/workflow-logs/processed/consolidated_logs.md
@@ -190,12 +210,12 @@ jobs:
           
           # Start JSON structure
           echo "{" > /tmp/workflow-logs/processed/logs.json
-          echo "  \"workflow_info\": $(cat /tmp/workflow-logs/workflow-info.json)," >> /tmp/workflow-logs/processed/logs.json
+          echo "  \"workflow_info\": $(cat /tmp/workflow-logs/workflow-info.json 2>/dev/null || echo '{}')," >> /tmp/workflow-logs/processed/logs.json
           echo "  \"log_files\": [" >> /tmp/workflow-logs/processed/logs.json
           
-          # Add each log file as a JSON object
+          # Add each sanitized log file as a JSON object
           first_file=true
-          for log_file in $(find /tmp/workflow-logs -type f -name "*.txt" | sort); do
+          for log_file in $(find /tmp/workflow-logs/sanitized -type f | sort); do
             filename=$(basename "$log_file")
             
             # Add comma for all but the first file
@@ -205,8 +225,22 @@ jobs:
               echo "," >> /tmp/workflow-logs/processed/logs.json
             fi
             
-            # Escape special characters in log content
-            log_content=$(cat "$log_file" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+            # Safely read and escape log content
+            if [ -f "$log_file" ]; then
+              # Use a safer approach to escape JSON content
+              log_content=$(cat "$log_file" 2>/dev/null | 
+                           tr -d '\000' |  # Remove null bytes
+                           sed 's/\\/\\\\/g' | # Escape backslashes
+                           sed 's/"/\\"/g' |  # Escape quotes
+                           sed ':a;N;$!ba;s/\n/\\n/g') # Replace newlines
+              
+              # If log_content is empty due to errors, provide a placeholder
+              if [ -z "$log_content" ]; then
+                log_content="Error reading log content"
+              fi
+            else
+              log_content="File not found"
+            fi
             
             # Add log file as JSON object
             echo "    {" >> /tmp/workflow-logs/processed/logs.json
