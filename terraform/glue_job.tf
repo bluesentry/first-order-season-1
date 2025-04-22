@@ -2,6 +2,7 @@
 resource "aws_glue_job" "log_summarizer_job" {
   name         = "first-order-log-summarizer"
   role_arn     = aws_iam_role.glue_role.arn
+  glue_version = "5.0"
   max_capacity = 1.0 # For Python shell jobs, use max_capacity instead of worker_type
   timeout      = 60  # minutes
 
