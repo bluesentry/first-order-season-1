@@ -18,7 +18,7 @@ on:
           - 'true'
           - 'false'
       run_id:
-        description: 'Run ID of the Terraform workflow to download logs from (leave empty for latest, ignored if fetch_all is true)'
+        description: 'Run ID of the workflow to download logs from (leave empty for latest, ignored if fetch_all is true)'
         required: false
       workflow_name:
         description: 'Name of the workflow to download logs from (default: Terraform Deploy AWS Infrastructure)'
@@ -27,7 +27,7 @@ on:
       max_runs:
         description: 'Maximum number of runs to fetch when fetch_all is true (default: 10)'
         required: false
-        default: '100'
+        default: '10'
 
 permissions:
   id-token: write  # Required for OIDC authentication with AWS
@@ -52,7 +52,6 @@ jobs:
           role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.ROLE_NAME }}
           aws-region: ${{ env.AWS_REGION }}
       
-      # We'll keep the timestamp for the workflow-info.json file, but not use it for folder structure
       - name: Generate timestamp
         id: timestamp
         run: echo "TIMESTAMP=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_ENV
@@ -132,23 +131,21 @@ jobs:
             UPDATED_AT=$(echo $RUN_DETAILS | jq -r '.updated_at')
             
             # Create metadata file
-            cat > /tmp/all_runs/run_${RUN_ID}/workflow-info.json << EOF
-            {
-              "repository": "${{ github.repository }}",
-              "workflow_name": "${{ env.WORKFLOW_NAME }}",
-              "workflow_id": "${{ env.WORKFLOW_ID }}",
-              "run_id": "${RUN_ID}",
-              "run_number": "${RUN_NUMBER}",
-              "run_attempt": "${RUN_ATTEMPT}",
-              "event_name": "${EVENT_NAME}",
-              "actor": "${ACTOR}",
-              "conclusion": "${CONCLUSION}",
-              "status": "${STATUS}",
-              "created_at": "${CREATED_AT}",
-              "updated_at": "${UPDATED_AT}",
-              "timestamp": "${{ env.TIMESTAMP }}"
-            }
-            EOF
+            echo "{" > /tmp/all_runs/run_${RUN_ID}/workflow-info.json
+            echo "  \"repository\": \"${{ github.repository }}\"," >> /tmp/all_runs/run_${RUN_ID}/workflow-info.json
+            echo "  \"workflow_name\": \"${{ env.WORKFLOW_NAME }}\"," >> /tmp/all_runs/run_${RUN_ID}/workflow-info.json
+            echo "  \"workflow_id\": \"${{ env.WORKFLOW_ID }}\"," >> /tmp/all_runs/run_${RUN_ID}/workflow-info.json
+            echo "  \"run_id\": \"${RUN_ID}\"," >> /tmp/all_runs/run_${RUN_ID}/workflow-info.json
+            echo "  \"run_number\": \"${RUN_NUMBER}\"," >> /tmp/all_runs/run_${RUN_ID}/workflow-info.json
+            echo "  \"run_attempt\": \"${RUN_ATTEMPT}\"," >> /tmp/all_runs/run_${RUN_ID}/workflow-info.json
+            echo "  \"event_name\": \"${EVENT_NAME}\"," >> /tmp/all_runs/run_${RUN_ID}/workflow-info.json
+            echo "  \"actor\": \"${ACTOR}\"," >> /tmp/all_runs/run_${RUN_ID}/workflow-info.json
+            echo "  \"conclusion\": \"${CONCLUSION}\"," >> /tmp/all_runs/run_${RUN_ID}/workflow-info.json
+            echo "  \"status\": \"${STATUS}\"," >> /tmp/all_runs/run_${RUN_ID}/workflow-info.json
+            echo "  \"created_at\": \"${CREATED_AT}\"," >> /tmp/all_runs/run_${RUN_ID}/workflow-info.json
+            echo "  \"updated_at\": \"${UPDATED_AT}\"," >> /tmp/all_runs/run_${RUN_ID}/workflow-info.json
+            echo "  \"timestamp\": \"${{ env.TIMESTAMP }}\"" >> /tmp/all_runs/run_${RUN_ID}/workflow-info.json
+            echo "}" >> /tmp/all_runs/run_${RUN_ID}/workflow-info.json
             
             # Download logs
             echo "Downloading logs for run ID: ${RUN_ID}"
@@ -270,42 +267,40 @@ jobs:
             echo "}" >> /tmp/all_runs/run_${RUN_ID}/processed/logs.json
             
             # Create a summary file
-            cat > /tmp/all_runs/run_${RUN_ID}/processed/summary.md << EOF
-            # Workflow Log Summary for Run ${RUN_ID}
-            
-            ## Overview
-            
-            - **Repository:** ${{ github.repository }}
-            - **Workflow:** ${{ env.WORKFLOW_NAME }}
-            - **Run ID:** ${RUN_ID}
-            - **Run Number:** ${RUN_NUMBER}
-            - **Triggered By:** ${ACTOR}
-            - **Event:** ${EVENT_NAME}
-            - **Status:** ${STATUS}
-            - **Conclusion:** ${CONCLUSION}
-            - **Created At:** ${CREATED_AT}
-            - **Updated At:** ${UPDATED_AT}
-            
-            ## Log Files
-            
-            $(find /tmp/all_runs/run_${RUN_ID} -type f -name "*.txt" | wc -l) log files were captured from this workflow run.
-            
-            ## Analysis Instructions
-            
-            These logs are intended for analysis by a Large Language Model (LLM). The logs contain:
-            
-            1. Workflow execution details
-            2. Terraform operations (plan, apply, or destroy)
-            3. Infrastructure changes
-            4. Error messages (if any)
-            
-            When analyzing these logs, focus on:
-            
-            - Identifying successful vs. failed operations
-            - Extracting key infrastructure changes
-            - Highlighting any errors or warnings
-            - Providing a summary of the Terraform execution
-            EOF
+            echo "# Workflow Log Summary for Run ${RUN_ID}" > /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "## Overview" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "- **Repository:** ${{ github.repository }}" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "- **Workflow:** ${{ env.WORKFLOW_NAME }}" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "- **Run ID:** ${RUN_ID}" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "- **Run Number:** ${RUN_NUMBER}" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "- **Triggered By:** ${ACTOR}" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "- **Event:** ${EVENT_NAME}" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "- **Status:** ${STATUS}" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "- **Conclusion:** ${CONCLUSION}" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "- **Created At:** ${CREATED_AT}" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "- **Updated At:** ${UPDATED_AT}" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "## Log Files" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "$(find /tmp/all_runs/run_${RUN_ID} -type f -name \"*.txt\" | wc -l) log files were captured from this workflow run." >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "## Analysis Instructions" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "These logs are intended for analysis by a Large Language Model (LLM). The logs contain:" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "1. Workflow execution details" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "2. Terraform operations (plan, apply, or destroy)" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "3. Infrastructure changes" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "4. Error messages (if any)" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "When analyzing these logs, focus on:" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "- Identifying successful vs. failed operations" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "- Extracting key infrastructure changes" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "- Highlighting any errors or warnings" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
+            echo "- Providing a summary of the Terraform execution" >> /tmp/all_runs/run_${RUN_ID}/processed/summary.md
             
             # Upload logs to S3
             SAFE_WORKFLOW_NAME=$(echo "${{ env.WORKFLOW_NAME }}" | tr ' ' '_')
@@ -392,25 +387,24 @@ jobs:
           UPDATED_AT=$(echo $RUN_DETAILS | jq -r '.updated_at')
           
           # Create metadata file with workflow information
-          cat > /tmp/workflow-logs/workflow-info.json << EOF
-          {
-            "repository": "${{ github.repository }}",
-            "workflow_name": "${{ env.WORKFLOW_NAME }}",
-            "workflow_id": "${WORKFLOW_ID}",
-            "run_id": "${{ env.RUN_ID }}",
-            "run_number": "${RUN_NUMBER}",
-            "run_attempt": "${RUN_ATTEMPT}",
-            "event_name": "${EVENT_NAME}",
-            "actor": "${ACTOR}",
-            "conclusion": "${CONCLUSION}",
-            "status": "${STATUS}",
-            "created_at": "${CREATED_AT}",
-            "updated_at": "${UPDATED_AT}",
-            "timestamp": "${{ env.TIMESTAMP }}"
-          }
-          EOF
+          echo "{" > /tmp/workflow-logs/workflow-info.json
+          echo "  \"repository\": \"${{ github.repository }}\"," >> /tmp/workflow-logs/workflow-info.json
+          echo "  \"workflow_name\": \"${{ env.WORKFLOW_NAME }}\"," >> /tmp/workflow-logs/workflow-info.json
+          echo "  \"workflow_id\": \"${WORKFLOW_ID}\"," >> /tmp/workflow-logs/workflow-info.json
+          echo "  \"run_id\": \"${{ env.RUN_ID }}\"," >> /tmp/workflow-logs/workflow-info.json
+          echo "  \"run_number\": \"${RUN_NUMBER}\"," >> /tmp/workflow-logs/workflow-info.json
+          echo "  \"run_attempt\": \"${RUN_ATTEMPT}\"," >> /tmp/workflow-logs/workflow-info.json
+          echo "  \"event_name\": \"${EVENT_NAME}\"," >> /tmp/workflow-logs/workflow-info.json
+          echo "  \"actor\": \"${ACTOR}\"," >> /tmp/workflow-logs/workflow-info.json
+          echo "  \"conclusion\": \"${CONCLUSION}\"," >> /tmp/workflow-logs/workflow-info.json
+          echo "  \"status\": \"${STATUS}\"," >> /tmp/workflow-logs/workflow-info.json
+          echo "  \"created_at\": \"${CREATED_AT}\"," >> /tmp/workflow-logs/workflow-info.json
+          echo "  \"updated_at\": \"${UPDATED_AT}\"," >> /tmp/workflow-logs/workflow-info.json
+          echo "  \"timestamp\": \"${{ env.TIMESTAMP }}\"" >> /tmp/workflow-logs/workflow-info.json
+          echo "}" >> /tmp/workflow-logs/workflow-info.json
       
       - name: Prepare logs for LLM analysis
+        if: ${{ github.event.inputs.fetch_all != 'true' }}
         run: |
           # Create a directory for processed logs
           mkdir -p /tmp/workflow-logs/processed
@@ -485,114 +479,4 @@ jobs:
             if [ "$first_file" = true ]; then
               first_file=false
             else
-              echo "," >> /tmp/workflow-logs/processed/logs.json
-            fi
-            
-            # Safely read and escape log content
-            if [ -f "$log_file" ]; then
-              # Use a safer approach to escape JSON content
-              log_content=$(cat "$log_file" 2>/dev/null | 
-                           tr -d '\000' |  # Remove null bytes
-                           sed 's/\\/\\\\/g' | # Escape backslashes
-                           sed 's/"/\\"/g' |  # Escape quotes
-                           sed ':a;N;$!ba;s/\n/\\n/g') # Replace newlines
-              
-              # If log_content is empty due to errors, provide a placeholder
-              if [ -z "$log_content" ]; then
-                log_content="Error reading log content"
-              fi
-            else
-              log_content="File not found"
-            fi
-            
-            # Add log file as JSON object
-            echo "    {" >> /tmp/workflow-logs/processed/logs.json
-            echo "      \"filename\": \"$filename\"," >> /tmp/workflow-logs/processed/logs.json
-            echo "      \"content\": \"$log_content\"" >> /tmp/workflow-logs/processed/logs.json
-            echo -n "    }" >> /tmp/workflow-logs/processed/logs.json
-          done
-          
-          # Close JSON structure
-          echo "" >> /tmp/workflow-logs/processed/logs.json
-          echo "  ]" >> /tmp/workflow-logs/processed/logs.json
-          echo "}" >> /tmp/workflow-logs/processed/logs.json
-          
-          # Create a summary file with key information
-          echo "Creating summary file..."
-          cat > /tmp/workflow-logs/processed/summary.md << EOF
-          # Workflow Log Summary
-          
-          ## Overview
-          
-          - **Repository:** ${{ github.repository }}
-          - **Workflow:** ${{ env.WORKFLOW_NAME }}
-          - **Run ID:** ${{ env.RUN_ID }}
-          - **Run Number:** $(cat /tmp/workflow-logs/workflow-info.json | jq -r '.run_number')
-          - **Triggered By:** $(cat /tmp/workflow-logs/workflow-info.json | jq -r '.actor')
-          - **Event:** $(cat /tmp/workflow-logs/workflow-info.json | jq -r '.event_name')
-          - **Status:** $(cat /tmp/workflow-logs/workflow-info.json | jq -r '.status')
-          - **Conclusion:** $(cat /tmp/workflow-logs/workflow-info.json | jq -r '.conclusion')
-          - **Created At:** $(cat /tmp/workflow-logs/workflow-info.json | jq -r '.created_at')
-          - **Updated At:** $(cat /tmp/workflow-logs/workflow-info.json | jq -r '.updated_at')
-          
-          ## Log Files
-          
-          $(find /tmp/workflow-logs -type f -name "*.txt" | wc -l) log files were captured from this workflow run.
-          
-          ## Analysis Instructions
-          
-          These logs are intended for analysis by a Large Language Model (LLM). The logs contain:
-          
-          1. Workflow execution details
-          2. Terraform operations (plan, apply, or destroy)
-          3. Infrastructure changes
-          4. Error messages (if any)
-          
-          When analyzing these logs, focus on:
-          
-          - Identifying successful vs. failed operations
-          - Extracting key infrastructure changes
-          - Highlighting any errors or warnings
-          - Providing a summary of the Terraform execution
-          EOF
-      
-      - name: Upload logs to S3
-        run: |
-          # Get workflow name for folder structure (replace spaces with underscores)
-          SAFE_WORKFLOW_NAME=$(echo "${{ env.WORKFLOW_NAME }}" | tr ' ' '_')
-          
-          # Debug: Print the run ID to make sure it's set correctly
-          echo "Debug - Using Run ID: ${{ env.RUN_ID }}"
-          
-          # Create a more explicit folder structure based on run ID
-          RUN_ID_FOLDER="run_${{ env.RUN_ID }}"
-          echo "Using folder: $RUN_ID_FOLDER"
-          
-          # Upload all logs to S3 using run ID as the folder name
-          echo "Uploading workflow logs to S3..."
-          aws s3 sync /tmp/workflow-logs/ "s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/${RUN_ID_FOLDER}/raw/"
-          
-          # Upload processed logs to a separate prefix
-          echo "Uploading processed logs for LLM analysis..."
-          aws s3 sync /tmp/workflow-logs/processed/ "s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/${RUN_ID_FOLDER}/processed/"
-          
-          echo "Logs uploaded successfully to:"
-          echo "- Raw logs: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/${RUN_ID_FOLDER}/raw/"
-          echo "- Processed logs: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/${RUN_ID_FOLDER}/processed/"
-          
-          # Also create a "latest" symlink for easy access to the most recent logs
-          if [ "${{ github.event_name }}" == "workflow_run" ] || [ -z "${{ github.event.inputs.run_id }}" ]; then
-            echo "Creating 'latest' symlink..."
-            
-            # Create a temporary file with the latest run ID
-            echo "${{ env.RUN_ID }}" > /tmp/latest_run_id
-            
-            # Upload the file to the latest location
-            aws s3 cp /tmp/latest_run_id "s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/latest_run_id"
-            
-            # Copy the processed logs to the latest location
-            aws s3 sync "s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/${RUN_ID_FOLDER}/processed/" \
-                        "s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/latest/"
-            
-            echo "Latest logs also available at: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/latest/"
-          fi
+              echo "," >> /tmp/workflow-
