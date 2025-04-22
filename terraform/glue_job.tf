@@ -1,6 +1,6 @@
-# Glue Job for Log Summarization
+# Glue Job for Log Sanitization
 resource "aws_glue_job" "log_summarizer_job" {
-  name         = "first-order-log-summarizer"
+  name         = "first-order-log-sanitizer"
   role_arn     = aws_iam_role.glue_role.arn
   glue_version = "1.0"
   max_capacity = 1.0 # For Python shell jobs, use max_capacity instead of worker_type
@@ -17,11 +17,10 @@ resource "aws_glue_job" "log_summarizer_job" {
     "--job-language"                     = "python"
     "--enable-continuous-cloudwatch-log" = "true"
     "--enable-metrics"                   = "true"
-    "--s3_input_path"                    = "s3://${module.log_bucket.s3_bucket_id}/fluent-bit-logs/"
-    "--s3_output_path"                   = "s3://${module.log_bucket.s3_bucket_id}/log-analysis/"
-    "--save_model"                       = "true"
-    "--extra-py-files"                   = "s3://${module.log_bucket.s3_bucket_id}/glue-dependencies/sentence-transformers-2.2.2-py3-none-any.whl,s3://${module.log_bucket.s3_bucket_id}/glue-dependencies/faiss-1.7.4-py3-none-any.whl"
-    "--additional-python-modules"        = "pandas,numpy,torch,sentence-transformers,faiss-cpu"
+    "--bucket_name"                      = module.log_bucket.s3_bucket_id
+    "--input_prefix"                     = "log-analysis/workflow-logs-for-llm/"
+    "--output_prefix"                    = "log-analysis-sanitized/"
+    "--additional-python-modules"        = "boto3,re"
   }
 
   execution_property {
@@ -31,22 +30,24 @@ resource "aws_glue_job" "log_summarizer_job" {
   tags = var.tags
 }
 
-# SNS Topic for Log Analysis Notifications
+# SNS Topic for Log Sanitization Notifications
 resource "aws_sns_topic" "log_analysis_notifications" {
-  name = "first-order-log-analysis-notifications"
+  name = "first-order-log-sanitization-notifications"
   tags = var.tags
 }
 
 # Schedule for the Glue Job (daily run)
 resource "aws_glue_trigger" "log_summarizer_daily" {
-  name     = "first-order-log-summarizer-daily"
+  name     = "first-order-log-sanitizer-daily"
   type     = "SCHEDULED"
   schedule = "cron(0 1 * * ? *)" # Run at 1:00 AM UTC every day
 
   actions {
     job_name = aws_glue_job.log_summarizer_job.name
     arguments = {
-      "--notification_topic" = aws_sns_topic.log_analysis_notifications.arn
+      "--bucket_name"   = module.log_bucket.s3_bucket_id
+      "--input_prefix"  = "log-analysis/workflow-logs-for-llm/"
+      "--output_prefix" = "log-analysis-sanitized/"
     }
   }
 
@@ -63,8 +64,8 @@ resource "aws_s3_object" "glue_script" {
 
 # IAM policy for Glue job to access required resources
 resource "aws_iam_policy" "glue_log_summarizer_policy" {
-  name        = "first-order-glue-log-summarizer-policy"
-  description = "Policy for Glue Log Summarizer job"
+  name        = "first-order-glue-log-sanitizer-policy"
+  description = "Policy for Glue Log Sanitizer job"
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -124,9 +125,9 @@ resource "aws_iam_role_policy_attachment" "glue_log_summarizer_attachment" {
   policy_arn = aws_iam_policy.glue_log_summarizer_policy.arn
 }
 
-# CloudWatch Dashboard for Log Analysis
+# CloudWatch Dashboard for Log Sanitization
 resource "aws_cloudwatch_dashboard" "log_analysis_dashboard" {
-  dashboard_name = "first-order-log-analysis"
+  dashboard_name = "first-order-log-sanitization"
 
   dashboard_body = jsonencode({
     widgets = [
@@ -137,7 +138,7 @@ resource "aws_cloudwatch_dashboard" "log_analysis_dashboard" {
         width  = 24,
         height = 1,
         properties = {
-          markdown = "# Log Analysis Dashboard"
+          markdown = "# Log Sanitization Dashboard"
         }
       },
       {
@@ -178,7 +179,7 @@ resource "aws_cloudwatch_dashboard" "log_analysis_dashboard" {
         type   = "metric",
         x      = 0,
         y      = 7,
-        width  = 24,
+        width  = 12,
         height = 6,
         properties = {
           metrics = [
@@ -190,6 +191,23 @@ resource "aws_cloudwatch_dashboard" "log_analysis_dashboard" {
           title   = "Job Execution Time (ms)",
           period  = 300
         }
+      },
+      {
+        type   = "metric",
+        x      = 12,
+        y      = 7,
+        width  = 12,
+        height = 6,
+        properties = {
+          metrics = [
+            ["AWS/S3", "AllRequests", "BucketName", module.log_bucket.s3_bucket_id, "FilterId", "log-analysis-sanitized/", { "stat" : "Sum" }]
+          ],
+          view    = "timeSeries",
+          stacked = false,
+          region  = var.region,
+          title   = "S3 Sanitized Logs Requests",
+          period  = 300
+        }
       }
     ]
   })
@@ -197,18 +215,18 @@ resource "aws_cloudwatch_dashboard" "log_analysis_dashboard" {
 
 # Output the SNS topic ARN for subscribing to notifications
 output "log_analysis_sns_topic_arn" {
-  description = "ARN of the SNS topic for log analysis notifications"
+  description = "ARN of the SNS topic for log sanitization notifications"
   value       = aws_sns_topic.log_analysis_notifications.arn
 }
 
 # Output the Glue job name
 output "log_summarizer_job_name" {
-  description = "Name of the Glue job for log summarization"
+  description = "Name of the Glue job for log sanitization"
   value       = aws_glue_job.log_summarizer_job.name
 }
 
 # Output the CloudWatch dashboard URL
 output "log_analysis_dashboard_url" {
-  description = "URL of the CloudWatch dashboard for log analysis"
+  description = "URL of the CloudWatch dashboard for log sanitization"
   value       = "https://${var.region}.console.aws.amazon.com/cloudwatch/home?region=${var.region}#dashboards:name=${aws_cloudwatch_dashboard.log_analysis_dashboard.dashboard_name}"
 }
