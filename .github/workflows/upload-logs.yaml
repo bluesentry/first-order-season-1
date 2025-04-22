@@ -1,4 +1,4 @@
-name: Upload Terraform Workflow Logs to S3
+name: Upload Workflow Logs to S3 for LLM Analysis
 
 on:
   # Trigger after the Terraform workflow completes
@@ -12,6 +12,10 @@ on:
       run_id:
         description: 'Run ID of the Terraform workflow to download logs from (leave empty for latest)'
         required: false
+      workflow_name:
+        description: 'Name of the workflow to download logs from (default: Terraform Deploy AWS Infrastructure)'
+        required: false
+        default: 'Terraform Deploy AWS Infrastructure'
 
 permissions:
   id-token: write  # Required for OIDC authentication with AWS
@@ -26,7 +30,7 @@ env:
   S3_PREFIX: log-analysis
 
 jobs:
-  upload-terraform-logs:
+  upload-logs-for-llm:
     runs-on: ubuntu-latest
     
     steps:
@@ -41,7 +45,15 @@ jobs:
         run: echo "TIMESTAMP=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_ENV
       
       - name: Create temp directory for logs
-        run: mkdir -p /tmp/terraform-logs
+        run: mkdir -p /tmp/workflow-logs
+      
+      - name: Set workflow name
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ] && [ -n "${{ github.event.inputs.workflow_name }}" ]; then
+            echo "WORKFLOW_NAME=${{ github.event.inputs.workflow_name }}" >> $GITHUB_ENV
+          else
+            echo "WORKFLOW_NAME=Terraform Deploy AWS Infrastructure" >> $GITHUB_ENV
+          fi
       
       - name: Determine run ID
         id: determine-run-id
@@ -51,14 +63,14 @@ jobs:
           elif [ "${{ github.event_name }}" == "workflow_run" ]; then
             echo "RUN_ID=${{ github.event.workflow_run.id }}" >> $GITHUB_ENV
           else
-            # Get the latest run ID of the Terraform workflow
+            # Get the latest run ID of the specified workflow
             REPO="${{ github.repository }}"
             WORKFLOW_ID=$(curl -s \
               -H "Accept: application/vnd.github+json" \
               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
               -H "X-GitHub-Api-Version: 2022-11-28" \
               "https://api.github.com/repos/${REPO}/actions/workflows" | \
-              jq -r '.workflows[] | select(.name=="Terraform Deploy AWS Infrastructure") | .id')
+              jq -r '.workflows[] | select(.name=="${{ env.WORKFLOW_NAME }}") | .id')
             
             LATEST_RUN_ID=$(curl -s \
               -H "Accept: application/vnd.github+json" \
@@ -70,6 +82,7 @@ jobs:
             echo "RUN_ID=${LATEST_RUN_ID}" >> $GITHUB_ENV
           fi
           
+          echo "Using Workflow: ${{ env.WORKFLOW_NAME }}"
           echo "Using Run ID: ${{ env.RUN_ID }}"
       
       - name: Download workflow logs
@@ -82,18 +95,18 @@ jobs:
           API_URL="https://api.github.com/repos/${REPO}/actions/runs/${{ env.RUN_ID }}/logs"
           
           # Download logs zip file
-          curl -L -o /tmp/terraform-logs/logs.zip \
+          curl -L -o /tmp/workflow-logs/logs.zip \
             -H "Accept: application/vnd.github+json" \
             -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
             -H "X-GitHub-Api-Version: 2022-11-28" \
             ${API_URL}
           
           # Extract logs
-          unzip -o /tmp/terraform-logs/logs.zip -d /tmp/terraform-logs/
+          unzip -o /tmp/workflow-logs/logs.zip -d /tmp/workflow-logs/
           
           # List downloaded logs
           echo "Downloaded logs:"
-          ls -la /tmp/terraform-logs/
+          ls -la /tmp/workflow-logs/
       
       - name: Get workflow run details
         run: |
@@ -105,31 +118,157 @@ jobs:
             "https://api.github.com/repos/${REPO}/actions/runs/${{ env.RUN_ID }}")
           
           # Extract workflow name and other details
-          WORKFLOW_NAME=$(echo $RUN_DETAILS | jq -r '.workflow_id')
+          WORKFLOW_ID=$(echo $RUN_DETAILS | jq -r '.workflow_id')
           RUN_NUMBER=$(echo $RUN_DETAILS | jq -r '.run_number')
           RUN_ATTEMPT=$(echo $RUN_DETAILS | jq -r '.run_attempt')
           EVENT_NAME=$(echo $RUN_DETAILS | jq -r '.event')
           ACTOR=$(echo $RUN_DETAILS | jq -r '.actor.login')
+          CONCLUSION=$(echo $RUN_DETAILS | jq -r '.conclusion')
+          STATUS=$(echo $RUN_DETAILS | jq -r '.status')
+          CREATED_AT=$(echo $RUN_DETAILS | jq -r '.created_at')
+          UPDATED_AT=$(echo $RUN_DETAILS | jq -r '.updated_at')
           
           # Create metadata file with workflow information
-          cat > /tmp/terraform-logs/workflow-info.json << EOF
+          cat > /tmp/workflow-logs/workflow-info.json << EOF
           {
             "repository": "${{ github.repository }}",
-            "workflow_name": "Terraform Deploy AWS Infrastructure",
-            "workflow_id": "${WORKFLOW_NAME}",
+            "workflow_name": "${{ env.WORKFLOW_NAME }}",
+            "workflow_id": "${WORKFLOW_ID}",
             "run_id": "${{ env.RUN_ID }}",
             "run_number": "${RUN_NUMBER}",
             "run_attempt": "${RUN_ATTEMPT}",
             "event_name": "${EVENT_NAME}",
-            "timestamp": "${{ env.TIMESTAMP }}",
-            "actor": "${ACTOR}"
+            "actor": "${ACTOR}",
+            "conclusion": "${CONCLUSION}",
+            "status": "${STATUS}",
+            "created_at": "${CREATED_AT}",
+            "updated_at": "${UPDATED_AT}",
+            "timestamp": "${{ env.TIMESTAMP }}"
           }
+          EOF
+      
+      - name: Prepare logs for LLM analysis
+        run: |
+          # Create a directory for processed logs
+          mkdir -p /tmp/workflow-logs/processed
+          
+          # Create a consolidated log file with all logs
+          echo "# Workflow Logs for LLM Analysis" > /tmp/workflow-logs/processed/consolidated_logs.md
+          echo "" >> /tmp/workflow-logs/processed/consolidated_logs.md
+          echo "## Workflow Information" >> /tmp/workflow-logs/processed/consolidated_logs.md
+          echo "" >> /tmp/workflow-logs/processed/consolidated_logs.md
+          echo "- **Repository:** ${{ github.repository }}" >> /tmp/workflow-logs/processed/consolidated_logs.md
+          echo "- **Workflow:** ${{ env.WORKFLOW_NAME }}" >> /tmp/workflow-logs/processed/consolidated_logs.md
+          echo "- **Run ID:** ${{ env.RUN_ID }}" >> /tmp/workflow-logs/processed/consolidated_logs.md
+          echo "- **Timestamp:** ${{ env.TIMESTAMP }}" >> /tmp/workflow-logs/processed/consolidated_logs.md
+          echo "" >> /tmp/workflow-logs/processed/consolidated_logs.md
+          
+          # Add each log file to the consolidated file
+          echo "## Log Files" >> /tmp/workflow-logs/processed/consolidated_logs.md
+          echo "" >> /tmp/workflow-logs/processed/consolidated_logs.md
+          
+          # Process each log file
+          for log_file in $(find /tmp/workflow-logs -type f -name "*.txt" | sort); do
+            filename=$(basename "$log_file")
+            echo "Processing $filename..."
+            
+            # Add log file header
+            echo "### $filename" >> /tmp/workflow-logs/processed/consolidated_logs.md
+            echo "" >> /tmp/workflow-logs/processed/consolidated_logs.md
+            echo '```' >> /tmp/workflow-logs/processed/consolidated_logs.md
+            
+            # Add log content
+            cat "$log_file" >> /tmp/workflow-logs/processed/consolidated_logs.md
+            
+            # Close code block
+            echo '```' >> /tmp/workflow-logs/processed/consolidated_logs.md
+            echo "" >> /tmp/workflow-logs/processed/consolidated_logs.md
+          done
+          
+          # Create a JSON version for easier parsing by LLMs
+          echo "Creating JSON version of logs..."
+          
+          # Start JSON structure
+          echo "{" > /tmp/workflow-logs/processed/logs.json
+          echo "  \"workflow_info\": $(cat /tmp/workflow-logs/workflow-info.json)," >> /tmp/workflow-logs/processed/logs.json
+          echo "  \"log_files\": [" >> /tmp/workflow-logs/processed/logs.json
+          
+          # Add each log file as a JSON object
+          first_file=true
+          for log_file in $(find /tmp/workflow-logs -type f -name "*.txt" | sort); do
+            filename=$(basename "$log_file")
+            
+            # Add comma for all but the first file
+            if [ "$first_file" = true ]; then
+              first_file=false
+            else
+              echo "," >> /tmp/workflow-logs/processed/logs.json
+            fi
+            
+            # Escape special characters in log content
+            log_content=$(cat "$log_file" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | sed ':a;N;$!ba;s/\n/\\n/g')
+            
+            # Add log file as JSON object
+            echo "    {" >> /tmp/workflow-logs/processed/logs.json
+            echo "      \"filename\": \"$filename\"," >> /tmp/workflow-logs/processed/logs.json
+            echo "      \"content\": \"$log_content\"" >> /tmp/workflow-logs/processed/logs.json
+            echo -n "    }" >> /tmp/workflow-logs/processed/logs.json
+          done
+          
+          # Close JSON structure
+          echo "" >> /tmp/workflow-logs/processed/logs.json
+          echo "  ]" >> /tmp/workflow-logs/processed/logs.json
+          echo "}" >> /tmp/workflow-logs/processed/logs.json
+          
+          # Create a summary file with key information
+          echo "Creating summary file..."
+          cat > /tmp/workflow-logs/processed/summary.md << EOF
+          # Workflow Log Summary
+          
+          ## Overview
+          
+          - **Repository:** ${{ github.repository }}
+          - **Workflow:** ${{ env.WORKFLOW_NAME }}
+          - **Run ID:** ${{ env.RUN_ID }}
+          - **Run Number:** $(cat /tmp/workflow-logs/workflow-info.json | jq -r '.run_number')
+          - **Triggered By:** $(cat /tmp/workflow-logs/workflow-info.json | jq -r '.actor')
+          - **Event:** $(cat /tmp/workflow-logs/workflow-info.json | jq -r '.event_name')
+          - **Status:** $(cat /tmp/workflow-logs/workflow-info.json | jq -r '.status')
+          - **Conclusion:** $(cat /tmp/workflow-logs/workflow-info.json | jq -r '.conclusion')
+          - **Created At:** $(cat /tmp/workflow-logs/workflow-info.json | jq -r '.created_at')
+          - **Updated At:** $(cat /tmp/workflow-logs/workflow-info.json | jq -r '.updated_at')
+          
+          ## Log Files
+          
+          $(find /tmp/workflow-logs -type f -name "*.txt" | wc -l) log files were captured from this workflow run.
+          
+          ## Analysis Instructions
+          
+          These logs are intended for analysis by a Large Language Model (LLM). The logs contain:
+          
+          1. Workflow execution details
+          2. Terraform operations (plan, apply, or destroy)
+          3. Infrastructure changes
+          4. Error messages (if any)
+          
+          When analyzing these logs, focus on:
+          
+          - Identifying successful vs. failed operations
+          - Extracting key infrastructure changes
+          - Highlighting any errors or warnings
+          - Providing a summary of the Terraform execution
           EOF
       
       - name: Upload logs to S3
         run: |
-          # Upload logs to S3
-          echo "Uploading Terraform workflow logs to S3..."
-          aws s3 sync /tmp/terraform-logs/ s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/terraform-workflow-logs/${{ env.TIMESTAMP }}/
+          # Upload all logs to S3
+          echo "Uploading workflow logs to S3..."
+          aws s3 sync /tmp/workflow-logs/ s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${{ env.TIMESTAMP }}/raw/
           
-          echo "Logs uploaded successfully to s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/terraform-workflow-logs/${{ env.TIMESTAMP }}/"
+          # Upload processed logs to a separate prefix
+          echo "Uploading processed logs for LLM analysis..."
+          aws s3 sync /tmp/workflow-logs/processed/ s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${{ env.TIMESTAMP }}/processed/
+          
+          echo "Logs uploaded successfully to:"
+          echo "- Raw logs: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${{ env.TIMESTAMP }}/raw/"
+          echo "- Processed logs: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${{ env.TIMESTAMP }}/processed/"
