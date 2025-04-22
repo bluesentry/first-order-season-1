@@ -6,6 +6,8 @@ import numpy as np
 from datetime import datetime, timedelta
 import re
 import os
+import io
+import gzip
 from typing import List, Dict, Any, Optional, Tuple
 from urllib.parse import urlparse
 
@@ -84,11 +86,24 @@ class LogSummarizer:
         bucket = parsed_uri.netloc
         key = parsed_uri.path.lstrip('/')
         
-        # Handle directory vs file
+        print(f"Searching for logs in s3://{bucket}/{key}")
+        
+        # Handle directory with nested structure (year/month/day/hour/minute)
         if not key.endswith('.json') and not key.endswith('.gz'):
-            # List objects in directory
-            response = self.s3.list_objects_v2(Bucket=bucket, Prefix=key)
-            files = [obj['Key'] for obj in response.get('Contents', [])]
+            # List all objects recursively in the directory
+            paginator = self.s3.get_paginator('list_objects_v2')
+            files = []
+            
+            # Iterate through all pages of results
+            for page in paginator.paginate(Bucket=bucket, Prefix=key):
+                if 'Contents' in page:
+                    for obj in page['Contents']:
+                        obj_key = obj['Key']
+                        # Only process .json or .gz files
+                        if obj_key.endswith('.json') or obj_key.endswith('.gz') or '.json.gz' in obj_key:
+                            files.append(obj_key)
+            
+            print(f"Found {len(files)} log files")
         else:
             # Single file
             files = [key]
@@ -98,16 +113,21 @@ class LogSummarizer:
             if not (file_key.endswith('.json') or file_key.endswith('.gz')):
                 continue
                 
-            # Get the object from S3
-            obj = self.s3.get_object(Bucket=bucket, Key=file_key)
-            
-            if file_key.endswith('.gz'):
-                # Decompress and decode
-                with gzip.GzipFile(fileobj=io.BytesIO(obj['Body'].read())) as f:
-                    content = f.read().decode('utf-8')
-            else:
-                # Just decode
-                content = obj['Body'].read().decode('utf-8')
+            try:
+                # Get the object from S3
+                print(f"Processing file: s3://{bucket}/{file_key}")
+                obj = self.s3.get_object(Bucket=bucket, Key=file_key)
+                
+                if file_key.endswith('.gz') or '.json.gz' in file_key:
+                    # Decompress and decode
+                    with gzip.GzipFile(fileobj=io.BytesIO(obj['Body'].read())) as f:
+                        content = f.read().decode('utf-8')
+                else:
+                    # Just decode
+                    content = obj['Body'].read().decode('utf-8')
+            except Exception as e:
+                print(f"Error processing file {file_key}: {e}")
+                continue
                 
             # Process each line as a JSON record
             for line in content.splitlines():
