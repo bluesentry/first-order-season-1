@@ -1,0 +1,169 @@
+name: Sanitize Logs in S3
+
+on:
+  # Trigger after the Upload Workflow Logs workflow completes
+  workflow_run:
+    workflows: ["Upload Workflow Logs to S3 for LLM Analysis"]
+    types:
+      - completed
+  # Allow manual triggering
+  workflow_dispatch:
+    inputs:
+      bucket_name:
+        description: 'S3 bucket name (default: first-order-application-logs)'
+        required: false
+        default: 'first-order-application-logs'
+      input_prefix:
+        description: 'S3 input prefix (default: log-analysis/workflow-logs-for-llm/)'
+        required: false
+        default: 'log-analysis/workflow-logs-for-llm/'
+      output_prefix:
+        description: 'S3 output prefix (default: log-analysis-sanitized/)'
+        required: false
+        default: 'log-analysis-sanitized/'
+
+permissions:
+  id-token: write  # Required for OIDC authentication with AWS
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+  AWS_ACCOUNT_ID: 704855531002
+  ROLE_NAME: BlueSentry
+  GLUE_JOB_NAME: first-order-log-sanitizer
+
+jobs:
+  trigger-glue-job:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::${{ env.AWS_ACCOUNT_ID }}:role/${{ env.ROLE_NAME }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Set parameters
+        run: |
+          # Set bucket name
+          if [ "${{ github.event.inputs.bucket_name }}" != "" ]; then
+            echo "BUCKET_NAME=${{ github.event.inputs.bucket_name }}" >> $GITHUB_ENV
+          else
+            echo "BUCKET_NAME=first-order-application-logs" >> $GITHUB_ENV
+          fi
+          
+          # Set input prefix
+          if [ "${{ github.event.inputs.input_prefix }}" != "" ]; then
+            echo "INPUT_PREFIX=${{ github.event.inputs.input_prefix }}" >> $GITHUB_ENV
+          else
+            echo "INPUT_PREFIX=log-analysis/workflow-logs-for-llm/" >> $GITHUB_ENV
+          fi
+          
+          # Set output prefix
+          if [ "${{ github.event.inputs.output_prefix }}" != "" ]; then
+            echo "OUTPUT_PREFIX=${{ github.event.inputs.output_prefix }}" >> $GITHUB_ENV
+          else
+            echo "OUTPUT_PREFIX=log-analysis-sanitized/" >> $GITHUB_ENV
+          fi
+      
+      - name: Start Glue job
+        run: |
+          echo "Starting Glue job: ${{ env.GLUE_JOB_NAME }}"
+          echo "Bucket: ${{ env.BUCKET_NAME }}"
+          echo "Input prefix: ${{ env.INPUT_PREFIX }}"
+          echo "Output prefix: ${{ env.OUTPUT_PREFIX }}"
+          
+          # Start the Glue job
+          JOB_RUN_ID=$(aws glue start-job-run \
+            --job-name ${{ env.GLUE_JOB_NAME }} \
+            --arguments \
+              "--bucket_name=${{ env.BUCKET_NAME }}" \
+              "--input_prefix=${{ env.INPUT_PREFIX }}" \
+              "--output_prefix=${{ env.OUTPUT_PREFIX }}" \
+            --output json | jq -r '.JobRunId')
+          
+          echo "JOB_RUN_ID=${JOB_RUN_ID}" >> $GITHUB_ENV
+          echo "Started Glue job with run ID: ${JOB_RUN_ID}"
+      
+      - name: Wait for job completion
+        run: |
+          echo "Waiting for Glue job to complete..."
+          
+          # Initialize variables
+          JOB_STATUS="STARTING"
+          MAX_ATTEMPTS=60  # 30 minutes (30 * 60 seconds / 30 seconds per check)
+          ATTEMPT=0
+          
+          # Poll job status until it completes or fails
+          while [ "${JOB_STATUS}" == "STARTING" ] || [ "${JOB_STATUS}" == "RUNNING" ]; do
+            # Check if we've exceeded max attempts
+            if [ ${ATTEMPT} -ge ${MAX_ATTEMPTS} ]; then
+              echo "Exceeded maximum wait time. Job is still running but workflow will continue."
+              break
+            fi
+            
+            # Sleep for 30 seconds before checking again
+            sleep 30
+            
+            # Get job status
+            JOB_STATUS=$(aws glue get-job-run \
+              --job-name ${{ env.GLUE_JOB_NAME }} \
+              --run-id ${{ env.JOB_RUN_ID }} \
+              --output json | jq -r '.JobRun.JobRunState')
+            
+            echo "Job status: ${JOB_STATUS} (Attempt ${ATTEMPT}/${MAX_ATTEMPTS})"
+            
+            # Increment attempt counter
+            ATTEMPT=$((ATTEMPT+1))
+          done
+          
+          # Check final status
+          if [ "${JOB_STATUS}" == "SUCCEEDED" ]; then
+            echo "Glue job completed successfully!"
+          elif [ "${JOB_STATUS}" == "RUNNING" ]; then
+            echo "Glue job is still running after maximum wait time. Workflow will continue."
+            echo "You can check the job status in the AWS Glue console."
+          else
+            echo "Glue job failed with status: ${JOB_STATUS}"
+            
+            # Get error message if available
+            ERROR_MESSAGE=$(aws glue get-job-run \
+              --job-name ${{ env.GLUE_JOB_NAME }} \
+              --run-id ${{ env.JOB_RUN_ID }} \
+              --output json | jq -r '.JobRun.ErrorMessage // "No error message available"')
+            
+            echo "Error message: ${ERROR_MESSAGE}"
+            exit 1
+          fi
+      
+      - name: Get job metrics
+        if: success() || failure()
+        run: |
+          echo "Getting job metrics..."
+          
+          # Get job run details
+          JOB_DETAILS=$(aws glue get-job-run \
+            --job-name ${{ env.GLUE_JOB_NAME }} \
+            --run-id ${{ env.JOB_RUN_ID }} \
+            --output json)
+          
+          # Extract metrics
+          START_TIME=$(echo ${JOB_DETAILS} | jq -r '.JobRun.StartedOn')
+          END_TIME=$(echo ${JOB_DETAILS} | jq -r '.JobRun.CompletedOn // "Still running"')
+          EXECUTION_TIME=$(echo ${JOB_DETAILS} | jq -r '.JobRun.ExecutionTime // 0')
+          
+          echo "Job started at: ${START_TIME}"
+          echo "Job completed at: ${END_TIME}"
+          echo "Execution time: ${EXECUTION_TIME} seconds"
+          
+          # Get CloudWatch logs URL
+          LOG_GROUP="/aws-glue/jobs/output"
+          LOG_STREAM="j_${{ env.JOB_RUN_ID }}"
+          
+          LOGS_URL="https://${{ env.AWS_REGION }}.console.aws.amazon.com/cloudwatch/home?region=${{ env.AWS_REGION }}#logsV2:log-groups/log-group/${LOG_GROUP}/log-events/${LOG_STREAM}"
+          
+          echo "CloudWatch logs URL: ${LOGS_URL}"
+          
+          # List sanitized files
+          echo "Listing sanitized files in S3..."
+          aws s3 ls "s3://${{ env.BUCKET_NAME }}/${{ env.OUTPUT_PREFIX }}" --recursive --summarize
