@@ -25,11 +25,17 @@ plan.out
 .DS_Store
 
 # Logs
-logs
+# Excluding our logs directory from being ignored
+# logs
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# But keep tracking the logs directory for our GitHub workflow
+!logs/
+!logs/*.log
+!logs/README.md
 
 # Testing
 coverage/
