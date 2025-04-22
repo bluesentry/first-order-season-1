@@ -295,14 +295,34 @@ jobs:
       
       - name: Upload logs to S3
         run: |
-          # Upload all logs to S3
+          # Get workflow name for folder structure (replace spaces with underscores)
+          SAFE_WORKFLOW_NAME=$(echo "${{ env.WORKFLOW_NAME }}" | tr ' ' '_')
+          
+          # Upload all logs to S3 using run ID as the folder name
           echo "Uploading workflow logs to S3..."
-          aws s3 sync /tmp/workflow-logs/ s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${{ env.TIMESTAMP }}/raw/
+          aws s3 sync /tmp/workflow-logs/ s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/run_${{ env.RUN_ID }}/raw/
           
           # Upload processed logs to a separate prefix
           echo "Uploading processed logs for LLM analysis..."
-          aws s3 sync /tmp/workflow-logs/processed/ s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${{ env.TIMESTAMP }}/processed/
+          aws s3 sync /tmp/workflow-logs/processed/ s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/run_${{ env.RUN_ID }}/processed/
           
           echo "Logs uploaded successfully to:"
-          echo "- Raw logs: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${{ env.TIMESTAMP }}/raw/"
-          echo "- Processed logs: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${{ env.TIMESTAMP }}/processed/"
+          echo "- Raw logs: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/run_${{ env.RUN_ID }}/raw/"
+          echo "- Processed logs: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/run_${{ env.RUN_ID }}/processed/"
+          
+          # Also create a "latest" symlink for easy access to the most recent logs
+          if [ "${{ github.event_name }}" == "workflow_run" ] || [ -z "${{ github.event.inputs.run_id }}" ]; then
+            echo "Creating 'latest' symlink..."
+            
+            # Create a temporary file with the latest run ID
+            echo "${{ env.RUN_ID }}" > /tmp/latest_run_id
+            
+            # Upload the file to the latest location
+            aws s3 cp /tmp/latest_run_id s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/latest_run_id
+            
+            # Copy the processed logs to the latest location
+            aws s3 sync s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/run_${{ env.RUN_ID }}/processed/ \
+                        s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/latest/
+            
+            echo "Latest logs also available at: s3://${{ env.S3_BUCKET }}/${{ env.S3_PREFIX }}/workflow-logs-for-llm/${SAFE_WORKFLOW_NAME}/latest/"
+          fi
